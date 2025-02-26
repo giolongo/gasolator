@@ -1,12 +1,18 @@
-<div id="container">
-  <div id="navbar">
-    <app-header-feature></app-header-feature>
-  </div>
-  <div id="content">
-    Ciao Content
-  </div>
-  <div id="footer">
-    <app-footer-feature></app-footer-feature>
-  </div>
-</div>
-
+<mat-drawer-container autosize>
+  <mat-drawer #drawer mode="over">
+    <app-siderbar-feature></app-siderbar-feature>
+  </mat-drawer>
+  <mat-drawer-content>
+    <div id="container">
+      <div id="navbar">
+        <app-header-feature (openSidebar)="updateSidebarSignal(true)"></app-header-feature>
+      </div>
+      <div id="content">
+        Ciao Content
+      </div>
+      <div id="footer">
+        <app-footer-feature></app-footer-feature>
+      </div>
+    </div>
+  </mat-drawer-content>
+</mat-drawer-container>

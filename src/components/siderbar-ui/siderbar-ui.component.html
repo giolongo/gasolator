@@ -1,1 +1,15 @@
-<p>siderbar-ui works!</p>
+<div style="display: flex; width: 100%; height: 100%; flex-direction: column;">
+    <img src="gasolator.png" style="height: 20%; margin-left: auto; margin-right: auto;">
+    <form style="display: flex; flex-direction: column; margin: auto;" *ngIf="formSignal() as form" [formGroup]="form"
+        (ngSubmit)="onSubmit()">
+
+        <!-- <mat-form-field appearance="outline">
+            <mat-label>{{fromFormControlName()}}</mat-label>
+            <input matInput *ngIf="fromFormControlName() as name" type="text" [id]="name" [formControlName]="name">
+        </mat-form-field> -->
+        <app-input-ui *ngIf="fromFormControlName() as name" [controlName]="name" [formSignal]="form"></app-input-ui>
+        <app-input-ui *ngIf="toFormControlName() as name" [controlName]="name" [formSignal]="form"></app-input-ui>
+
+        <button type="submit" mat-raised-button [disabled]="form.invalid">Submit</button>
+    </form>
+</div>

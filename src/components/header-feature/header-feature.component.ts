@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, output } from '@angular/core';
 import { HeaderUiComponent } from "../header-ui/header-ui.component";
 
 @Component({
@@ -8,5 +8,7 @@ import { HeaderUiComponent } from "../header-ui/header-ui.component";
   styleUrl: './header-feature.component.scss'
 })
 export class HeaderFeatureComponent {
+
+    openSidebar = output();
 
 }

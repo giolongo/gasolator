@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, output } from '@angular/core';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,5 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
   styleUrl: './header-ui.component.scss'
 })
 export class HeaderUiComponent {
+
+  openSidebar = output();
 
 }
