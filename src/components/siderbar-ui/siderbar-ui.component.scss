@@ -11,3 +11,23 @@
     flex-direction: column;
     align-items: flex-start;
   }
+
+  form {
+    display: flex; 
+    flex-direction: column; 
+    margin: auto;
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+
+  button {
+    margin-top: 10px;
+  }
+
+  img {
+    height: 20%; margin-left: auto; margin-right: auto;
+  }
+
+  .sidebar-container {
+    display: flex; width: 100%; height: 100%; flex-direction: column;
+  }

@@ -14,4 +14,6 @@ export class InputUiComponent {
 
     public formSignal = input<FormGroup>();
     public controlName = input<string>();
+    public label = input<string>();
+    public type = input<string>();
 }
