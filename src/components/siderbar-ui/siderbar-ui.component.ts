@@ -36,9 +36,9 @@ export class SiderbarUiComponent {
   public fromFormControlName = input<string>();
   public toFormControlName = input<string>();
   public selectKmTypeName = input<string>();
-
   public costKmLFormControlName = input<string>();
   public costLKmFormControlName = input<string>();
+  public costForDayControlName = input<string>();
 
 
   protected exceuteCalculate = output<any>();

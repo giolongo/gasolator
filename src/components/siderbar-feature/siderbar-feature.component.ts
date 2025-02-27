@@ -16,6 +16,7 @@ export class SiderbarFeatureComponent implements OnInit {
   public costKmLFormControlName = 'kmL';
   public costLKmFormControlName = 'lKm';
   public selectKmTypeName = 'selectKmType';
+  public costForDayControlName = 'costForDay';
   public gasolatorForm?: FormGroup;
   public costKmFormControlName = this.costKmLFormControlName;
 
@@ -23,6 +24,7 @@ export class SiderbarFeatureComponent implements OnInit {
     this.gasolatorForm = this.fb.group({
       [this.fromFormName]: ['', Validators.required],
       [this.toFormName]: ['', Validators.required],
+      [this.costForDayControlName]: ['', Validators.required],
       [this.selectKmTypeName]: ['kmL', Validators.required],
       [this.costKmLFormControlName]: ['0', Validators.required],
       [this.costLKmFormControlName]: ['0'],
