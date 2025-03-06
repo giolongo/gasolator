@@ -47,7 +47,6 @@ export class SiderbarUiComponent {
 
   onSubmit(): void {
     const formValue = this.formSignal()?.value;
-    console.log(formValue);
     this.exceuteCalculate.emit(formValue);
   }
 }

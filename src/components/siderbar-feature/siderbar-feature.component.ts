@@ -33,7 +33,6 @@ export class SiderbarFeatureComponent implements OnInit {
     });
 
     this.gasolatorForm.get(this.selectKmTypeName)?.valueChanges.subscribe(val => {
-      debugger;
       if (val === 'kmL') {
         this.gasolatorForm?.get(this.costLKmFormControlName)?.clearValidators();
         this.gasolatorForm?.get(this.costKmLFormControlName)?.setValidators(Validators.required);
