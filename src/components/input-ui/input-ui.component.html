@@ -1,8 +1,20 @@
 <div *ngIf="formSignal() as form">
     <form [formGroup]="form">
-        <mat-form-field *ngIf="controlName() as name" appearance="outline" style="width: 100%;">
+        {{isAutocomplete()}}
+        <mat-form-field *ngIf="isAutocomplete()" appearance="outline" style="width: 100%;">
             <mat-label>{{ label() }}</mat-label>
-            <input *ngIf="type() as type" matInput [type]="type" [id]="name" [formControlName]="name">
+            <input *ngIf="type() as type" matInput [type]="type" [id]="controlName() ?? '' " [formControlName]="controlName() ?? ''" [matAutocomplete]="auto">
+            <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete" [displayWith]="getOptionText">
+                @for (option of suggest(); track option) {
+                    <mat-option [value]="option">{{option.display_name}}</mat-option>
+                }
+            </mat-autocomplete>
+        </mat-form-field>
+        <mat-form-field *ngIf="!isAutocomplete()" appearance="outline" style="width: 100%;">
+            <mat-label>{{ label() }}</mat-label>
+            <input *ngIf="type() as type" matInput [type]="type" [id]="controlName() ?? '' " [formControlName]="controlName() ?? ''">
         </mat-form-field>
     </form>
 </div>
+
+

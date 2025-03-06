@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, effect, inject, input, OnInit } from '@angular/core';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
@@ -9,6 +9,7 @@ import { Point, LineString } from 'ol/geom';
 import { Icon, Style, Stroke, Fill } from 'ol/style';
 import { Vector as VectorLayer } from 'ol/layer';
 import { Vector as VectorSource } from 'ol/source';
+import { RestService } from '../../services/rest.service';
 
 @Component({
   selector: 'app-map-feature',
@@ -16,13 +17,27 @@ import { Vector as VectorSource } from 'ol/source';
   styleUrls: ['./map-feature.component.scss']
 })
 export class MapFeatureComponent implements OnInit {
+  private restService = inject(RestService);
+
+  from = input<{lat: number | string, lon: number | string}>();
+  to = input<{lat: number | string, lon: number | string}>();
+
   map?: Map;
+
+  constructor() {
+    effect(() => {
+      debugger
+      if(this.from() && this.to()){
+        this.initializeMap(this.from(), this.to())
+      }
+    })
+  }
 
   ngOnInit(): void {
     this.initializeMap();
   }
 
-  initializeMap(): void {
+  initializeMap(from?: {lat: number | string, lon: number | string}, to?: {lat: number | string, lon: number | string}): void {
     // 🔹 **Layer di base con OpenStreetMap**
     const osmLayer = new TileLayer({
       source: new OSM()
@@ -46,17 +61,15 @@ export class MapFeatureComponent implements OnInit {
 
         // 🔹 **Sposta la mappa sulla posizione dell'utente**
         this.map?.getView().setCenter(fromLonLat([userLon, userLat]));
-
-        // 🔹 **Aggiungi i marker utente e destinazione**
-        this.addMarkers(userLon, userLat, 12.4964, 41.9028);
-
-        // 🔹 **Disegna il percorso**
-        this.drawRoute(userLon, userLat, [12.4964, 41.9028]);
       }, (error) => {
         console.error("Errore geolocalizzazione:", error);
       });
     } else {
       alert("Geolocalizzazione non supportata.");
+    }
+    if(from && to){
+
+      this.addMarkers(+from.lon, +from.lat, +to.lon, +to.lon)
     }
   }
 
@@ -95,62 +108,56 @@ export class MapFeatureComponent implements OnInit {
 
   // 🔹 **Funzione per calcolare e disegnare il percorso**
   drawRoute(startLon: number, startLat: number, endLonLat: number[]): void {
-    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startLon},${startLat};${endLonLat[0]},${endLonLat[1]}?overview=full&geometries=polyline`;
 
-    fetch(osrmUrl)
-      .then(response => response.json())
-      .then(data => {
-        console.log('OSRM Response:', data);
+    this.restService.getOsrmRoute(startLon,startLat,endLonLat[0],endLonLat[1]).subscribe(data => {
+      console.log('OSRM Response:', data);
 
-        if (data.routes && data.routes.length > 0) {
-          const route = data.routes[0].geometry;
-          const coordinates = this.decodePolyline(route);
+      if (data && 'routes' in data && data.routes.length > 0) {
+        const route = data.routes[0].geometry;
+        const coordinates = this.decodePolyline(route);
 
-          console.log('Decoded coordinates:', coordinates);
+        console.log('Decoded coordinates:', coordinates);
 
-          // 🔹 **Converti le coordinate in formato OpenLayers**
-          const transformedCoordinates = coordinates.map(coord => fromLonLat(coord));
+        // 🔹 **Converti le coordinate in formato OpenLayers**
+        const transformedCoordinates = coordinates.map(coord => fromLonLat(coord));
 
-          // 🔹 **Crea la LineString del percorso**
-          const routeLine = new LineString(transformedCoordinates);
-          console.log('Route Line:', routeLine);
+        // 🔹 **Crea la LineString del percorso**
+        const routeLine = new LineString(transformedCoordinates);
+        console.log('Route Line:', routeLine);
 
-          // 🔹 **Crea un Feature per il percorso**
-          const routeFeature = new Feature(routeLine);
+        // 🔹 **Crea un Feature per il percorso**
+        const routeFeature = new Feature(routeLine);
 
-          // 🔹 **Stile del percorso**
-          const routeStyle = new Style({
-            stroke: new Stroke({
-              color: '#FF0000', // Rosso
-              width: 5
-            })
-          });
+        // 🔹 **Stile del percorso**
+        const routeStyle = new Style({
+          stroke: new Stroke({
+            color: '#FF0000', // Rosso
+            width: 5
+          })
+        });
 
-          routeFeature.setStyle(routeStyle);
+        routeFeature.setStyle(routeStyle);
 
-          // 🔹 **Crea un Vector Layer per il percorso**
-          const routeSource = new VectorSource({
-            features: [routeFeature]
-          });
+        // 🔹 **Crea un Vector Layer per il percorso**
+        const routeSource = new VectorSource({
+          features: [routeFeature]
+        });
 
-          const routeLayer = new VectorLayer({
-            source: routeSource
-          });
+        const routeLayer = new VectorLayer({
+          source: routeSource
+        });
 
-          this.map?.addLayer(routeLayer);
+        this.map?.addLayer(routeLayer);
 
-          // 🔹 **Centra la mappa sul percorso**
-          const extent = routeLine.getExtent();
-          console.log('Extent of the route:', extent);
-          this.map?.getView().fit(extent, { padding: [50, 50, 50, 50] });
+        // 🔹 **Centra la mappa sul percorso**
+        const extent = routeLine.getExtent();
+        console.log('Extent of the route:', extent);
+        this.map?.getView().fit(extent, { padding: [50, 50, 50, 50] });
 
-        } else {
-          console.log('Nessun percorso trovato.');
-        }
-      })
-      .catch(error => {
-        console.error('Errore nel recuperare il percorso:', error);
-      });
+      } else {
+        console.log('Nessun percorso trovato.');
+      }
+    }, (error) => console.error)
   }
 
   // 🔹 **Funzione per decodificare la geometria Polyline**

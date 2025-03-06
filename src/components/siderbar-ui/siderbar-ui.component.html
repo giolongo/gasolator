@@ -2,12 +2,12 @@
     <img src="gasolator.png">
     <form *ngIf="formSignal() as form" [formGroup]="form" (ngSubmit)="onSubmit()">
         <app-input-ui *ngIf="fromFormControlName() as name" [label]="name | titlecase" type="text" [controlName]="name"
-            [formSignal]="form"></app-input-ui>
+            [isAutocomplete]="true" [suggest]="fromAutocompleteSuggest()" [formSignal]="form"></app-input-ui>
         <app-input-ui *ngIf="toFormControlName() as name" [label]="name | titlecase" type="text" [controlName]="name"
-            [formSignal]="form"></app-input-ui>        
-        <app-input-ui *ngIf="costForDayControlName() as name" label="Cost for day (wear of the vehicle)" type="number" [controlName]="name"
-            [formSignal]="form"></app-input-ui>
-            <app-input-ui *ngIf="fuelCostControlName() as name" label="Fuel cost (€/l)" type="number" [controlName]="name"
+            [isAutocomplete]="true" [suggest]="toAutocompleteSuggest()" [formSignal]="form"></app-input-ui>
+        <app-input-ui *ngIf="costForDayControlName() as name" label="Cost for day (wear of the vehicle)" type="number"
+            [controlName]="name" [formSignal]="form"></app-input-ui>
+        <app-input-ui *ngIf="fuelCostControlName() as name" label="Fuel cost (€/l)" type="number" [controlName]="name"
             [formSignal]="form"></app-input-ui>
         <mat-card appearance="outlined">
             <div style="margin: 1rem; display: flex; flex-direction: column;">
@@ -19,13 +19,13 @@
 
                 <div *ngIf="selectKmTypeName() as kmTypeName">
                     <div *ngIf="costKmLFormControlName() === form.get(kmTypeName)?.value">
-                        <app-input-ui *ngIf="costKmLFormControlName() as name" type="number" [controlName]="name" label="Km/l"
-                            [formSignal]="form"></app-input-ui>
+                        <app-input-ui *ngIf="costKmLFormControlName() as name" type="number" [controlName]="name"
+                            label="Km/l" [formSignal]="form"></app-input-ui>
                     </div>
 
                     <div *ngIf="costLKmFormControlName() === form.get(kmTypeName)?.value">
-                        <app-input-ui *ngIf="costLKmFormControlName() as name" type="number" [controlName]="name" label="l/100Km"
-                            [formSignal]="form"></app-input-ui>
+                        <app-input-ui *ngIf="costLKmFormControlName() as name" type="number" [controlName]="name"
+                            label="l/100Km" [formSignal]="form"></app-input-ui>
                     </div>
                 </div>
             </div>
