@@ -4,6 +4,7 @@ import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatAutocomplete, MatAutocompleteModule } from '@angular/material/autocomplete';
+import { NominationSuggestModel } from '../../models/nomination-suggest.model';
 
 @Component({
   selector: 'app-input-ui',
@@ -21,9 +22,9 @@ export class InputUiComponent {
   public label = input<string>();
   public type = input<string>();
   public isAutocomplete = input<boolean>();
-  public suggest = input<any[]>();
+  public suggest = input<NominationSuggestModel[]>();
 
-  getOptionText(option: any) {
+  getOptionText(option: NominationSuggestModel) {
     return option.display_name;
   }
 }

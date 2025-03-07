@@ -4,6 +4,9 @@ import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 import { RestService } from '../../services/rest.service';
 import { debounceTime, filter, map, switchMap, tap } from 'rxjs';
 import { autocompleteValidator } from '../../validators/autocomplete.validator';
+import {CoordinateModel} from '../../models/coordinate.model'
+import { DistanceModel } from '../../models/distance.model';
+import { NominationSuggestModel } from '../../models/nomination-suggest.model';
 
 @Component({
   selector: 'app-siderbar-feature',
@@ -15,12 +18,12 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
   private fb = inject(FormBuilder);
   private restService = inject(RestService);
 
-  protected exceuteCalculate = output<any>();
+  protected exceuteCalculate = output<DistanceModel>();
   protected travelMessage = output<string>();
   public distanceKm = input<number>();
 
-  public fromAutocompleteSuggest: { place_id: number, display_name: string, lat: number, long: number }[] = [];
-  public toAutocompleteSuggest: { place_id: number, display_name: string, lat: number, long: number }[] = [];
+  public fromAutocompleteSuggest: NominationSuggestModel[] = [];
+  public toAutocompleteSuggest: NominationSuggestModel[] = [];
 
   public travelCost?: number;
   public fromFormName = 'from';
@@ -32,8 +35,8 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
   public fuelCostControlName = 'costFuel';
   public gasolatorForm?: FormGroup;
   public costKmFormControlName = this.costKmLFormControlName;
-  public fromLatLng?: { lat: number | string, lon: number | string };
-  public toLatLng?: { lat: number | string, lon: number | string };
+  public fromLatLng?: CoordinateModel;
+  public toLatLng?: CoordinateModel;
 
   constructor() {
     effect(() => {
@@ -41,8 +44,6 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
       if (distanceKmVal && distanceKmVal > 0) {
         let travelCost = 0;
         let consumption;
-
-
         const kmType = this.gasolatorForm?.get(this.selectKmTypeName)?.value;
         const costLKm = +this.gasolatorForm?.get(this.costLKmFormControlName)?.value;
         const costKmL = +this.gasolatorForm?.get(this.costKmLFormControlName)?.value;
@@ -65,7 +66,7 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
               costForDay;
           }
         }
-        this.travelMessage.emit(`The trip of ${distanceKmVal} km will cost €${(+travelCost).toFixed(2)}, considering the fuel cost (€${fuelCost}), vehicle wear (€${costForDay}), and average fuel consumption (€${consumption})`)
+        this.travelMessage.emit(`The trip of ${distanceKmVal} km will cost €${(+travelCost).toFixed(2)}, considering the fuel cost (€${fuelCost}), vehicle wear (€${costForDay}), and average fuel consumption (${consumption}). The price does not include extra transport costs.`)
       }
     })
   }

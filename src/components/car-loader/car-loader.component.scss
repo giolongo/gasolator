@@ -17,14 +17,18 @@
   }
   
   .car {
+
     position: absolute;
     animation: moveCar 5s linear infinite;  /* Animazione infinita da sinistra a destra */
   }
   
   .text {
-    font-size: 24px;
-    color: #fff;
     margin-left: 10px;
+  }
+
+  img {
+    height: 100%;
+    width: 100%;
   }
   
   @keyframes moveCar {

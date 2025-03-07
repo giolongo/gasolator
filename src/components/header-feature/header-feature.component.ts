@@ -8,7 +8,6 @@ import { HeaderUiComponent } from "../header-ui/header-ui.component";
   styleUrl: './header-feature.component.scss'
 })
 export class HeaderFeatureComponent {
-
     openSidebar = output();
 
 }

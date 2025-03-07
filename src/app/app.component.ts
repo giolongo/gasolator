@@ -8,6 +8,7 @@ import { CarLoaderComponent } from "../components/car-loader/car-loader.componen
 import { RestService } from '../services/rest.service';
 import { CommonModule } from '@angular/common';
 import {MatSnackBar} from '@angular/material/snack-bar';
+import { DistanceModel } from '../models/distance.model';
 
 @Component({
   selector: 'app-root',
@@ -17,7 +18,7 @@ import {MatSnackBar} from '@angular/material/snack-bar';
 })
 export class AppComponent implements OnInit {
   title = 'gasolator';
-  coordinate: any;
+  coordinate?: DistanceModel;
   distanceKm: number = 0;  
 
 
@@ -48,7 +49,7 @@ export class AppComponent implements OnInit {
     })
   }
 
-  calculateRoute(coordinate: any) {
+  calculateRoute(coordinate: DistanceModel) {
     this.coordinate = coordinate
     this.drawer.close()
   }

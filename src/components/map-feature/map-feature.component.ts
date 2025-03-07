@@ -140,8 +140,8 @@ export class MapFeatureComponent implements OnInit {
         // 🔹 **Stile del percorso**
         const routeStyle = new Style({
           stroke: new Stroke({
-            color: '#00FF00', // Verde
-            width: 5
+            color: '#0066cc',
+            width: 4
           })
         });
 
