@@ -21,7 +21,6 @@ export class AppComponent implements OnInit {
   coordinate?: DistanceModel;
   distanceKm: number = 0;  
 
-
   private restService = inject(RestService);
   private snackBar = inject(MatSnackBar);
 

@@ -4,7 +4,7 @@ import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 import { RestService } from '../../services/rest.service';
 import { debounceTime, filter, map, switchMap, tap } from 'rxjs';
 import { autocompleteValidator } from '../../validators/autocomplete.validator';
-import {CoordinateModel} from '../../models/coordinate.model'
+import { CoordinateModel } from '../../models/coordinate.model'
 import { DistanceModel } from '../../models/distance.model';
 import { NominationSuggestModel } from '../../models/nomination-suggest.model';
 
@@ -50,22 +50,25 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
         const fuelCost = +(this.gasolatorForm?.get(this.fuelCostControlName)?.value);
         const costForDay = +(this.gasolatorForm?.get(this.costForDayControlName)?.value);
 
-        if (distanceKmVal) {
-          if (kmType === 'lKm') {
-            consumption = costLKm + 'l/100km';
-            travelCost =
-              +(distanceKmVal / 100).toFixed(2) *
-              costLKm *
-              fuelCost +
-              costForDay;
-          } else {
-            consumption = costKmL + 'km/l';
-            travelCost =
-              +(distanceKmVal / (costKmL)).toFixed(2) *
-              fuelCost +
-              costForDay;
-          }
+        debugger
+        if (kmType === 'lKm') {
+          consumption = costLKm + 'l/100km';
+          travelCost =
+            +(distanceKmVal / 100).toFixed(2) *
+            costLKm *
+            fuelCost +
+            costForDay;
+        } else {
+          consumption = costKmL + 'km/l';
+          travelCost =
+            +(distanceKmVal / (costKmL)).toFixed(2) *
+            fuelCost +
+            costForDay;
         }
+        if(Number.isNaN(travelCost)) {
+          travelCost = 0;
+        }
+
         this.travelMessage.emit(`The trip of ${distanceKmVal} km will cost €${(+travelCost).toFixed(2)}, considering the fuel cost (€${fuelCost}), vehicle wear (€${costForDay}), and average fuel consumption (${consumption}). The price does not include extra transport costs.`)
       }
     })
@@ -75,7 +78,7 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
     this.gasolatorForm = this.fb.group({
       [this.fromFormName]: ['', Validators.required],
       [this.toFormName]: ['', [Validators.required, autocompleteValidator()]],
-      [this.costForDayControlName]: ['', Validators.required],
+      [this.costForDayControlName]: ['0', Validators.required],
       [this.selectKmTypeName]: ['kmL', Validators.required],
       [this.fuelCostControlName]: ['0', Validators.required],
       [this.costKmLFormControlName]: ['0', Validators.required],
