@@ -29,7 +29,6 @@ export class MapFeatureComponent implements OnInit {
 
   constructor() {
     effect(() => {
-      debugger
       if (this.from() && this.to()) {
         this.initializeMap(this.from(), this.to())
       }
@@ -113,6 +112,7 @@ export class MapFeatureComponent implements OnInit {
       source: vectorSource
     });
 
+    this.dynamicLayers.push(vectorLayer);
     this.map?.addLayer(vectorLayer);
   }
 
@@ -120,20 +120,15 @@ export class MapFeatureComponent implements OnInit {
   drawRoute(startLon: number, startLat: number, endLonLat: number[]): void {
 
     this.restService.getOsrmRoute(startLon, startLat, endLonLat[0], endLonLat[1]).subscribe(data => {
-      console.log('OSRM Response:', data);
-
-      if (data && 'routes' in data && data.routes.length > 0) {
+      if (data && 'routes' in data && data.routes && data.routes.length > 0) {
         const route = data.routes[0].geometry;
         const coordinates = this.decodePolyline(route);
-
-        console.log('Decoded coordinates:', coordinates);
 
         // 🔹 **Converti le coordinate in formato OpenLayers**
         const transformedCoordinates = coordinates.map(coord => fromLonLat(coord));
 
         // 🔹 **Crea la LineString del percorso**
         const routeLine = new LineString(transformedCoordinates);
-        console.log('Route Line:', routeLine);
 
         // 🔹 **Crea un Feature per il percorso**
         const routeFeature = new Feature(routeLine);
@@ -162,11 +157,10 @@ export class MapFeatureComponent implements OnInit {
 
         // 🔹 **Centra la mappa sul percorso**
         const extent = routeLine.getExtent();
-        console.log('Extent of the route:', extent);
         this.map?.getView().fit(extent, { padding: [50, 50, 50, 50] });
         this.distanceInKm = +(data.routes[0].distance / 1000).toFixed(2);
       } else {
-        console.log('Nessun percorso trovato.');
+        console.warn('Nessun percorso trovato.');
       }
     }, (error) => console.error)
   }

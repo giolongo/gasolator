@@ -1,6 +1,5 @@
 <div *ngIf="formSignal() as form">
     <form [formGroup]="form">
-        {{isAutocomplete()}}
         <mat-form-field *ngIf="isAutocomplete()" appearance="outline" style="width: 100%;">
             <mat-label>{{ label() }}</mat-label>
             <input *ngIf="type() as type" matInput [type]="type" [id]="controlName() ?? '' " [formControlName]="controlName() ?? ''" [matAutocomplete]="auto">

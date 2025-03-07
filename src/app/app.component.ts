@@ -46,6 +46,7 @@ export class AppComponent implements OnInit {
 
   calculateRoute(coordinate: any) {
     this.coordinate = coordinate
+    this.drawer.close()
   }
 
 }
