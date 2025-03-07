@@ -1,0 +1,38 @@
+.loader-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.5); /* Sfondo semitrasparente */
+    z-index: 10000; /* Assicurati che il loader si sovrapponga agli altri contenuti */
+  }
+  
+  .loader {
+    display: flex;
+    align-items: center;
+  }
+  
+  .car {
+    position: absolute;
+    animation: moveCar 5s linear infinite;  /* Animazione infinita da sinistra a destra */
+  }
+  
+  .text {
+    font-size: 24px;
+    color: #fff;
+    margin-left: 10px;
+  }
+  
+  @keyframes moveCar {
+    0% {
+      transform: translateX(-100vw);  /* La macchina parte completamente fuori schermo a sinistra */
+    }
+    100% {
+      transform: translateX(100vw);  /* La macchina arriva completamente fuori schermo a destra */
+    }
+  }
+  

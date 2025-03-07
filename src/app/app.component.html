@@ -1,3 +1,4 @@
+<app-car-loader *ngIf="isLoading$ | async"></app-car-loader>
 <mat-drawer-container autosize>
   <mat-drawer #drawer mode="over">
     <app-siderbar-feature (exceuteCalculate)="calculateRoute($event)"></app-siderbar-feature>
