@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, OnInit } from '@angular/core';
+import { Component, effect, EventEmitter, inject, input, OnInit, Output, output } from '@angular/core';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
@@ -20,10 +20,12 @@ export class MapFeatureComponent implements OnInit {
   private restService = inject(RestService);
 
   private dynamicLayers: VectorLayer<VectorSource>[] = [];
-  private distanceInKm: number = 0;
+
 
   from = input<{ lat: number | string, lon: number | string }>();
   to = input<{ lat: number | string, lon: number | string }>();
+  distanceInKm = output<number>();
+  // @Output() showToast = new EventEmitter<number>();
 
   map?: Map;
 
@@ -55,7 +57,7 @@ export class MapFeatureComponent implements OnInit {
 
   initializeMap(from?: { lat: number | string, lon: number | string }, to?: { lat: number | string, lon: number | string }): void {
     this.removeDynamicLayers(); // 🔹 Rimuove i vecchi marker e route
-  
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
         const userLon = position.coords.longitude;
@@ -67,7 +69,7 @@ export class MapFeatureComponent implements OnInit {
     } else {
       alert("Geolocalizzazione non supportata.");
     }
-  
+
     if (from && to) {
       this.addMarkers(+from.lon, +from.lat, +to.lon, +to.lat);
       this.drawRoute(+from.lon, +from.lat, [+to.lon, +to.lat]);
@@ -80,7 +82,7 @@ export class MapFeatureComponent implements OnInit {
       this.dynamicLayers = []; // Svuota l'array
     }
   }
-  
+
 
   // 🔹 **Funzione per aggiungere i marker di inizio e fine percorso**
   addMarkers(userLon: number, userLat: number, destLon: number, destLat: number): void {
@@ -118,9 +120,11 @@ export class MapFeatureComponent implements OnInit {
 
   // 🔹 **Funzione per calcolare e disegnare il percorso**
   drawRoute(startLon: number, startLat: number, endLonLat: number[]): void {
-
+    this.distanceInKm.emit(0)
     this.restService.getOsrmRoute(startLon, startLat, endLonLat[0], endLonLat[1]).subscribe(data => {
       if (data && 'routes' in data && data.routes && data.routes.length > 0) {
+
+
         const route = data.routes[0].geometry;
         const coordinates = this.decodePolyline(route);
 
@@ -158,7 +162,7 @@ export class MapFeatureComponent implements OnInit {
         // 🔹 **Centra la mappa sul percorso**
         const extent = routeLine.getExtent();
         this.map?.getView().fit(extent, { padding: [50, 50, 50, 50] });
-        this.distanceInKm = +(data.routes[0].distance / 1000).toFixed(2);
+        this.distanceInKm.emit(+(data.routes[0].distance / 1000).toFixed(2))
       } else {
         console.warn('Nessun percorso trovato.');
       }

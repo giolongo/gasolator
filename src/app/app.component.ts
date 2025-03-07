@@ -7,6 +7,7 @@ import { MapFeatureComponent } from "../components/map-feature/map-feature.compo
 import { CarLoaderComponent } from "../components/car-loader/car-loader.component";
 import { RestService } from '../services/rest.service';
 import { CommonModule } from '@angular/common';
+import {MatSnackBar} from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-root',
@@ -17,8 +18,11 @@ import { CommonModule } from '@angular/common';
 export class AppComponent implements OnInit {
   title = 'gasolator';
   coordinate: any;
+  distanceKm: number = 0;  
+
 
   private restService = inject(RestService);
+  private snackBar = inject(MatSnackBar);
 
   public isLoading$ = this.restService.inLoading;
 
@@ -47,6 +51,13 @@ export class AppComponent implements OnInit {
   calculateRoute(coordinate: any) {
     this.coordinate = coordinate
     this.drawer.close()
+  }
+
+  openMessage(message: string){
+    this.snackBar.open(message, 'OK', {
+      horizontalPosition: 'end',
+      verticalPosition: 'bottom'
+    });
   }
 
 }

@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, effect, inject, input, OnInit, output } from '@angular/core';
+import { AfterViewInit, Component, computed, effect, inject, input, OnInit, output, signal } from '@angular/core';
 import { SiderbarUiComponent } from "../siderbar-ui/siderbar-ui.component";
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { RestService } from '../../services/rest.service';
@@ -16,10 +16,13 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
   private restService = inject(RestService);
 
   protected exceuteCalculate = output<any>();
+  protected travelMessage = output<string>();
+  public distanceKm = input<number>();
 
   public fromAutocompleteSuggest: { place_id: number, display_name: string, lat: number, long: number }[] = [];
   public toAutocompleteSuggest: { place_id: number, display_name: string, lat: number, long: number }[] = [];
 
+  public travelCost?: number;
   public fromFormName = 'from';
   public toFormName = 'to';
   public costKmLFormControlName = 'kmL';
@@ -31,6 +34,42 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
   public costKmFormControlName = this.costKmLFormControlName;
   public fromLatLng?: { lat: number | string, lon: number | string };
   public toLatLng?: { lat: number | string, lon: number | string };
+
+  constructor() {
+    effect(() => {
+      const distanceKmVal = this.distanceKm();
+      if (distanceKmVal && distanceKmVal > 0) {
+        let travelCost = 0;
+        let consumption;
+
+
+        const kmType = this.gasolatorForm?.get(this.selectKmTypeName)?.value;
+        const costLKm = +this.gasolatorForm?.get(this.costLKmFormControlName)?.value;
+        const costKmL = +this.gasolatorForm?.get(this.costKmLFormControlName)?.value;
+        const fuelCost = +(this.gasolatorForm?.get(this.fuelCostControlName)?.value);
+        const costForDay = +(this.gasolatorForm?.get(this.costForDayControlName)?.value);
+
+        if (distanceKmVal) {
+          if (kmType === 'lKm') {
+            consumption = costLKm + 'l/100km';
+            travelCost =
+              +(distanceKmVal / 100).toFixed(2) *
+              costLKm *
+              fuelCost +
+              costForDay;
+          } else {
+            consumption = costKmL + 'km/l';
+            travelCost =
+              +(distanceKmVal / (costKmL)).toFixed(2) *
+              fuelCost +
+              costForDay;
+          }
+        }
+        this.travelMessage.emit(`The trip of ${distanceKmVal} km will cost €${(+travelCost).toFixed(2)}, considering the fuel cost (€${fuelCost}), vehicle wear (€${costForDay}), and average fuel consumption (€${consumption})`)
+      }
+    })
+  }
+
   ngOnInit(): void {
     this.gasolatorForm = this.fb.group({
       [this.fromFormName]: ['', Validators.required],
