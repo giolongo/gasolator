@@ -19,25 +19,24 @@ import { RestService } from '../../services/rest.service';
 export class MapFeatureComponent implements OnInit {
   private restService = inject(RestService);
 
-  from = input<{lat: number | string, lon: number | string}>();
-  to = input<{lat: number | string, lon: number | string}>();
+  private dynamicLayers: VectorLayer<VectorSource>[] = [];
+  private distanceInKm: number = 0;
+
+  from = input<{ lat: number | string, lon: number | string }>();
+  to = input<{ lat: number | string, lon: number | string }>();
 
   map?: Map;
 
   constructor() {
     effect(() => {
       debugger
-      if(this.from() && this.to()){
+      if (this.from() && this.to()) {
         this.initializeMap(this.from(), this.to())
       }
     })
   }
 
   ngOnInit(): void {
-    this.initializeMap();
-  }
-
-  initializeMap(from?: {lat: number | string, lon: number | string}, to?: {lat: number | string, lon: number | string}): void {
     // 🔹 **Layer di base con OpenStreetMap**
     const osmLayer = new TileLayer({
       source: new OSM()
@@ -52,14 +51,16 @@ export class MapFeatureComponent implements OnInit {
         zoom: 12
       })
     });
+    this.initializeMap();
+  }
 
-    // 🔹 **Geolocalizzazione utente**
+  initializeMap(from?: { lat: number | string, lon: number | string }, to?: { lat: number | string, lon: number | string }): void {
+    this.removeDynamicLayers(); // 🔹 Rimuove i vecchi marker e route
+  
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
         const userLon = position.coords.longitude;
         const userLat = position.coords.latitude;
-
-        // 🔹 **Sposta la mappa sulla posizione dell'utente**
         this.map?.getView().setCenter(fromLonLat([userLon, userLat]));
       }, (error) => {
         console.error("Errore geolocalizzazione:", error);
@@ -67,11 +68,20 @@ export class MapFeatureComponent implements OnInit {
     } else {
       alert("Geolocalizzazione non supportata.");
     }
-    if(from && to){
-
-      this.addMarkers(+from.lon, +from.lat, +to.lon, +to.lon)
+  
+    if (from && to) {
+      this.addMarkers(+from.lon, +from.lat, +to.lon, +to.lat);
+      this.drawRoute(+from.lon, +from.lat, [+to.lon, +to.lat]);
     }
   }
+
+  removeDynamicLayers(): void {
+    if (this.map) {
+      this.dynamicLayers.forEach(layer => this.map?.removeLayer(layer));
+      this.dynamicLayers = []; // Svuota l'array
+    }
+  }
+  
 
   // 🔹 **Funzione per aggiungere i marker di inizio e fine percorso**
   addMarkers(userLon: number, userLat: number, destLon: number, destLat: number): void {
@@ -109,7 +119,7 @@ export class MapFeatureComponent implements OnInit {
   // 🔹 **Funzione per calcolare e disegnare il percorso**
   drawRoute(startLon: number, startLat: number, endLonLat: number[]): void {
 
-    this.restService.getOsrmRoute(startLon,startLat,endLonLat[0],endLonLat[1]).subscribe(data => {
+    this.restService.getOsrmRoute(startLon, startLat, endLonLat[0], endLonLat[1]).subscribe(data => {
       console.log('OSRM Response:', data);
 
       if (data && 'routes' in data && data.routes.length > 0) {
@@ -131,7 +141,7 @@ export class MapFeatureComponent implements OnInit {
         // 🔹 **Stile del percorso**
         const routeStyle = new Style({
           stroke: new Stroke({
-            color: '#FF0000', // Rosso
+            color: '#00FF00', // Verde
             width: 5
           })
         });
@@ -147,13 +157,14 @@ export class MapFeatureComponent implements OnInit {
           source: routeSource
         });
 
+        this.dynamicLayers.push(routeLayer);
         this.map?.addLayer(routeLayer);
 
         // 🔹 **Centra la mappa sul percorso**
         const extent = routeLine.getExtent();
         console.log('Extent of the route:', extent);
         this.map?.getView().fit(extent, { padding: [50, 50, 50, 50] });
-
+        this.distanceInKm = +(data.routes[0].distance / 1000).toFixed(2);
       } else {
         console.log('Nessun percorso trovato.');
       }

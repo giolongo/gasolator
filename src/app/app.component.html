@@ -1,6 +1,6 @@
 <mat-drawer-container autosize>
   <mat-drawer #drawer mode="over">
-    <app-siderbar-feature></app-siderbar-feature>
+    <app-siderbar-feature (exceuteCalculate)="calculateRoute($event)"></app-siderbar-feature>
   </mat-drawer>
   <mat-drawer-content>
     <div id="container">
@@ -8,7 +8,7 @@
         <app-header-feature (openSidebar)="updateSidebarSignal(true)"></app-header-feature>
       </div>
       <div id="content">
-        <app-map-feature></app-map-feature>
+        <app-map-feature [from]="coordinate?.from" [to]="coordinate?.to"></app-map-feature>
       </div>
       <div id="footer">
         <app-footer-feature></app-footer-feature>

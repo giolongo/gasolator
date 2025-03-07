@@ -13,6 +13,7 @@ import { MapFeatureComponent } from "../components/map-feature/map-feature.compo
 })
 export class AppComponent implements OnInit {
   title = 'gasolator';
+  coordinate: any;
 
   @ViewChild('drawer', { static: true }) public drawer!: MatDrawer;
 
@@ -34,7 +35,10 @@ export class AppComponent implements OnInit {
     this.drawer.closedStart.subscribe(() => {
       this.updateSidebarSignal(false)
     })
+  }
 
+  calculateRoute(coordinate: any) {
+    this.coordinate = coordinate
   }
 
 }

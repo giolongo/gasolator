@@ -2,7 +2,8 @@ import { AfterViewInit, Component, effect, inject, input, OnInit, output } from 
 import { SiderbarUiComponent } from "../siderbar-ui/siderbar-ui.component";
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { RestService } from '../../services/rest.service';
-import { debounceTime, map, switchMap } from 'rxjs';
+import { debounceTime, filter, map, switchMap, tap } from 'rxjs';
+import { autocompleteValidator } from '../../validators/autocomplete.validator';
 
 @Component({
   selector: 'app-siderbar-feature',
@@ -16,8 +17,8 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
 
   protected exceuteCalculate = output<any>();
 
-  public fromAutocompleteSuggest: {place_id: number, display_name: string, lat: number, long: number}[] = []; 
-  public toAutocompleteSuggest: {place_id: number, display_name: string, lat: number, long: number}[] = []; 
+  public fromAutocompleteSuggest: { place_id: number, display_name: string, lat: number, long: number }[] = [];
+  public toAutocompleteSuggest: { place_id: number, display_name: string, lat: number, long: number }[] = [];
 
   public fromFormName = 'from';
   public toFormName = 'to';
@@ -28,12 +29,12 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
   public fuelCostControlName = 'costFuel';
   public gasolatorForm?: FormGroup;
   public costKmFormControlName = this.costKmLFormControlName;
-  public fromLatLng?: {lat: number | string, lon: number | string};
-  public toLatLng?: {lat: number | string, lon: number | string};
+  public fromLatLng?: { lat: number | string, lon: number | string };
+  public toLatLng?: { lat: number | string, lon: number | string };
   ngOnInit(): void {
     this.gasolatorForm = this.fb.group({
       [this.fromFormName]: ['', Validators.required],
-      [this.toFormName]: ['', Validators.required],
+      [this.toFormName]: ['', [Validators.required, autocompleteValidator()]],
       [this.costForDayControlName]: ['', Validators.required],
       [this.selectKmTypeName]: ['kmL', Validators.required],
       [this.fuelCostControlName]: ['0', Validators.required],
@@ -63,17 +64,15 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
       lat: this.gasolatorForm?.get(this.toFormName)?.value.lat,
       lon: this.gasolatorForm?.get(this.toFormName)?.value.lon,
     }
-    this.exceuteCalculate.emit({from: this.fromLatLng, to: this.toLatLng})
+    this.exceuteCalculate.emit({ from: this.fromLatLng, to: this.toLatLng })
   }
 
   ngAfterViewInit(): void {
-    this.gasolatorForm?.get(this.fromFormName)?.valueChanges.pipe(debounceTime(500),switchMap(val => {
-      debugger;
+    this.gasolatorForm?.get(this.fromFormName)?.valueChanges.pipe(tap(() => this.fromAutocompleteSuggest = []), filter(v => v.length > 2), debounceTime(500), switchMap(val => {
       return this.restService.searchAddress(val)
     })).subscribe(val => this.fromAutocompleteSuggest = val)
 
-    this.gasolatorForm?.get(this.toFormName)?.valueChanges.pipe(debounceTime(500),switchMap(val => {
-      debugger;
+    this.gasolatorForm?.get(this.toFormName)?.valueChanges.pipe(tap(() => this.toAutocompleteSuggest = []), filter(v => v.length > 2), debounceTime(500), switchMap(val => {
       return this.restService.searchAddress(val)
     })).subscribe(val => this.toAutocompleteSuggest = val)
   }
