@@ -1,5 +1,5 @@
 <div class="sidebar-container">
-    <img src="gasolator.png">
+    <img class="logo-img" src="gasolator.png">
     <form *ngIf="formSignal() as form" [formGroup]="form" (ngSubmit)="onSubmit()">
         <mat-label>Round Trip</mat-label>
         <mat-slide-toggle *ngIf="roundTripControlName() as name" [formControlName]="name"></mat-slide-toggle>
@@ -35,4 +35,7 @@
 
         <button type="submit" mat-flat-button [disabled]="form.invalid">Calculate</button>
     </form>
+    <a href="mailto:support@gasolator.com" style="display: block; margin: 0 auto; text-align: center;">
+        <img src="gasolator_contact.png" alt="Contact Support" style="max-width: 5rem; height: auto;">
+    </a>
 </div>
