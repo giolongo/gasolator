@@ -9,6 +9,9 @@ import {MatCardModule} from '@angular/material/card';
 import {MatButton} from '@angular/material/button';
 import { InputUiComponent } from "../input-ui/input-ui.component";
 import { GasolatorModel, NominationSuggestModel } from '../../models';
+import {
+  MatSlideToggleModule
+} from '@angular/material/slide-toggle';
 
 const imports = [
   MatButtonToggleModule,
@@ -20,6 +23,7 @@ const imports = [
   MatButton, 
   InputUiComponent,
   MatCardModule,
+  MatSlideToggleModule
 ]
 
 @Component({
@@ -39,6 +43,7 @@ export class SiderbarUiComponent {
   public costKmLFormControlName = input<string>();
   public costLKmFormControlName = input<string>();
   public costForDayControlName = input<string>();
+  public roundTripControlName = input<string>();
   public fuelCostControlName = input<string>();
   public fromAutocompleteSuggest = input<NominationSuggestModel[]>();
   public toAutocompleteSuggest = input<NominationSuggestModel[]>();
