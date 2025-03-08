@@ -24,7 +24,7 @@
     margin-top: 10px;
   }
 
-  img {
+  .logo-img {
     height: 20%; margin-left: auto; margin-right: auto;
   }
 
@@ -35,3 +35,15 @@
   mat-slide-toggle {
     margin-bottom: 1rem;
   }
+
+  a {
+    display: block;
+    margin: 0 auto;
+    text-align: center; /* Assicura che l'immagine sia centrata */
+    width: fit-content; /* Fai in modo che il link si adatti alla larghezza dell'immagine */
+}
+
+a img {
+    max-width: 100%; /* Impedisce che l'immagine diventi più grande del suo contenitore */
+    height: auto; /* Mantiene la proporzione corretta dell'immagine */
+}
