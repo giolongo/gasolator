@@ -33,6 +33,7 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
   public selectKmTypeName = 'selectKmType';
   public costForDayControlName = 'costForDay';
   public fuelCostControlName = 'costFuel';
+  public roundTripControlName = 'roundTrip';
   public gasolatorForm?: FormGroup;
   public costKmFormControlName = this.costKmLFormControlName;
   public fromLatLng?: CoordinateModel;
@@ -44,24 +45,24 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
       if (distanceKmVal && distanceKmVal > 0) {
         let travelCost = 0;
         let consumption;
+        const isRoundTrip = this.gasolatorForm?.get(this.roundTripControlName)?.value;
         const kmType = this.gasolatorForm?.get(this.selectKmTypeName)?.value;
         const costLKm = +this.gasolatorForm?.get(this.costLKmFormControlName)?.value;
         const costKmL = +this.gasolatorForm?.get(this.costKmLFormControlName)?.value;
         const fuelCost = +(this.gasolatorForm?.get(this.fuelCostControlName)?.value);
         const costForDay = +(this.gasolatorForm?.get(this.costForDayControlName)?.value);
 
-        debugger
         if (kmType === 'lKm') {
           consumption = costLKm + 'l/100km';
           travelCost =
-            +(distanceKmVal / 100).toFixed(2) *
+            +((isRoundTrip ? distanceKmVal *2 : distanceKmVal) / 100).toFixed(2) *
             costLKm *
             fuelCost +
             costForDay;
         } else {
           consumption = costKmL + 'km/l';
           travelCost =
-            +(distanceKmVal / (costKmL)).toFixed(2) *
+            +((isRoundTrip ? distanceKmVal *2 : distanceKmVal) / (costKmL)).toFixed(2) *
             fuelCost +
             costForDay;
         }
@@ -69,7 +70,12 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
           travelCost = 0;
         }
 
-        this.travelMessage.emit(`The trip of ${distanceKmVal} km will cost €${(+travelCost).toFixed(2)}, considering the fuel cost (€${fuelCost}), vehicle wear (€${costForDay}), and average fuel consumption (${consumption}). The price does not include extra transport costs.`)
+        if(isRoundTrip){
+          this.travelMessage.emit(`The trip is ${distanceKmVal * 2} km (${distanceKmVal} km for journey ) will cost €${(+travelCost).toFixed(2)}, considering the fuel cost (€${fuelCost}), vehicle wear (€${costForDay}), and average fuel consumption (${consumption}). The price does not include extra transport costs.`)
+        }else{
+          this.travelMessage.emit(`The trip of ${distanceKmVal} km will cost €${(+travelCost).toFixed(2)}, considering the fuel cost (€${fuelCost}), vehicle wear (€${costForDay}), and average fuel consumption (${consumption}). The price does not include extra transport costs.`)
+        }
+
       }
     })
   }
@@ -82,6 +88,7 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
       [this.selectKmTypeName]: ['kmL', Validators.required],
       [this.fuelCostControlName]: ['0', Validators.required],
       [this.costKmLFormControlName]: ['0', Validators.required],
+      [this.roundTripControlName]: [true, Validators.required],
       [this.costLKmFormControlName]: ['0'],
     });
 

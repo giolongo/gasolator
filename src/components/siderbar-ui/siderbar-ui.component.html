@@ -1,12 +1,14 @@
 <div class="sidebar-container">
     <img src="gasolator.png">
     <form *ngIf="formSignal() as form" [formGroup]="form" (ngSubmit)="onSubmit()">
+        <mat-label>Round Trip</mat-label>
+        <mat-slide-toggle *ngIf="roundTripControlName() as name" [formControlName]="name"></mat-slide-toggle>
         <app-input-ui *ngIf="fromFormControlName() as name" [label]="name | titlecase" type="text" [controlName]="name"
             [isAutocomplete]="true" [suggest]="fromAutocompleteSuggest()" [formSignal]="form"></app-input-ui>
         <app-input-ui *ngIf="toFormControlName() as name" [label]="name | titlecase" type="text" [controlName]="name"
             [isAutocomplete]="true" [suggest]="toAutocompleteSuggest()" [formSignal]="form"></app-input-ui>
-        <app-input-ui *ngIf="costForDayControlName() as name" label="Cost for travel (wear of the vehicle)" type="number"
-            [controlName]="name" [formSignal]="form"></app-input-ui>
+        <app-input-ui *ngIf="costForDayControlName() as name" label="Cost for travel (wear of the vehicle)"
+            type="number" [controlName]="name" [formSignal]="form"></app-input-ui>
         <app-input-ui *ngIf="fuelCostControlName() as name" label="Fuel cost (€/l)" type="number" [controlName]="name"
             [formSignal]="form"></app-input-ui>
         <mat-card appearance="outlined">
