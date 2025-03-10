@@ -1,19 +1,30 @@
 <div *ngIf="formSignal() as form">
     <form [formGroup]="form">
-        <mat-form-field *ngIf="isAutocomplete()" appearance="outline" style="width: 100%;">
-            <mat-label>{{ label() }}</mat-label>
-            <input *ngIf="type() as type" matInput [type]="type" [id]="controlName() ?? '' " [formControlName]="controlName() ?? ''" [matAutocomplete]="auto">
-            <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete" [displayWith]="getOptionText">
-                @for (option of suggest(); track option) {
-                    <mat-option [value]="option">{{option.display_name}}</mat-option>
-                }
-            </mat-autocomplete>
-        </mat-form-field>
-        <mat-form-field *ngIf="!isAutocomplete()" appearance="outline" style="width: 100%;">
-            <mat-label>{{ label() }}</mat-label>
-            <input *ngIf="type() as type" matInput [type]="type" [id]="controlName() ?? '' " [formControlName]="controlName() ?? ''">
-        </mat-form-field>
+            <mat-form-field *ngIf="isAutocomplete()" appearance="outline" style="width: 100%;">
+                <mat-label>{{ label() }}</mat-label>
+                <div *ngIf="formArrayNameSignal() as formArrayNameVal" [formArrayName]="formArrayNameVal">
+                    <input *ngIf="type() as type" matInput [type]="type" [id]="controlName()?.toString() ?? ''"
+                        [formControlName]="controlName() ?? ''" [matAutocomplete]="auto">
+                    <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete" [displayWith]="getOptionText">
+                        @for (option of suggest(); track option) {
+                        <mat-option [value]="option">{{option.display_name}}</mat-option>
+                        }
+                    </mat-autocomplete>
+                </div>
+                <div *ngIf="!formArrayNameSignal()">
+                    <input *ngIf="type() as type" matInput [type]="type" [id]="controlName()?.toString() ?? ''"
+                        [formControlName]="controlName() ?? ''" [matAutocomplete]="auto">
+                    <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete" [displayWith]="getOptionText">
+                        @for (option of suggest(); track option) {
+                        <mat-option [value]="option">{{option.display_name}}</mat-option>
+                        }
+                    </mat-autocomplete>
+                </div>
+            </mat-form-field>
+            <mat-form-field *ngIf="!isAutocomplete()" appearance="outline" style="width: 100%;">
+                <mat-label>{{ label() }}</mat-label>
+                <input *ngIf="type() as type" matInput [type]="type" [id]="controlName()?.toString() ?? ''"
+                    [formControlName]="controlName() ?? ''">
+            </mat-form-field>
     </form>
 </div>
-
-

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, input, output } from '@angular/core';
-import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { FormArray, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -32,25 +32,30 @@ const imports = [
     ...imports
    ],
   templateUrl: './siderbar-ui.component.html',
-  styleUrl: './siderbar-ui.component.scss'
+  styleUrl: './siderbar-ui.component.scss',
 })
 export class SiderbarUiComponent {
 
   public formSignal = input<FormGroup>();
   public fromFormControlName = input<string>();
   public toFormControlName = input<string>();
+  public itineraryForm = input<FormGroup>();
+  public intermediateStopsForm = input<FormArray>();
+  public intermediateStopsFormName = input<string>();
   public selectKmTypeName = input<string>();
   public costKmLFormControlName = input<string>();
   public costLKmFormControlName = input<string>();
   public costForDayControlName = input<string>();
   public roundTripControlName = input<string>();
   public fuelCostControlName = input<string>();
-  public fromAutocompleteSuggest = input<NominationSuggestModel[]>();
-  public toAutocompleteSuggest = input<NominationSuggestModel[]>();
+  public mapFormControlNameNominationSuggest =input<{[key: string | number]: NominationSuggestModel[]}>();
 
 
   protected exceuteCalculate = output<GasolatorModel>();
   protected changeKmCountType = output<'kmL' | 'lKm'>();
+  protected addStop = output<void>();
+
+
 
   onSubmit(): void {
     const formValue = this.formSignal()?.value;

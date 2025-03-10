@@ -10,9 +10,12 @@ import { Icon, Style, Stroke, Fill } from 'ol/style';
 import { Vector as VectorLayer } from 'ol/layer';
 import { Vector as VectorSource } from 'ol/source';
 import { RestService } from '../../services/rest.service';
+import { DistanceModel } from '../../models';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-map-feature',
+  imports: [CommonModule],
   templateUrl: './map-feature.component.html',
   styleUrls: ['./map-feature.component.scss']
 })
@@ -21,18 +24,37 @@ export class MapFeatureComponent implements OnInit {
 
   private dynamicLayers: VectorLayer<VectorSource>[] = [];
 
+  coordinate = input<DistanceModel>();
 
-  from = input<{ lat: number | string, lon: number | string }>();
-  to = input<{ lat: number | string, lon: number | string }>();
+
   distanceInKm = output<number>();
+  distanceInKmVal = 0;
   // @Output() showToast = new EventEmitter<number>();
 
   map?: Map;
 
   constructor() {
     effect(() => {
-      if (this.from() && this.to()) {
-        this.initializeMap(this.from(), this.to())
+      debugger
+      this.distanceInKm.emit(0)
+      this.distanceInKmVal = 0;
+      if (this.coordinate()?.from && this.coordinate()?.to) {
+        debugger
+        this.removeDynamicLayers(); // 🔹 Rimuove i vecchi marker e route
+        const coordinate = this.coordinate();
+        if(!coordinate?.intermediateStops || coordinate.intermediateStops.length === 0){
+          this.initializeMap(coordinate?.from, coordinate?.to);
+          return;
+        }
+        this.initializeMap(coordinate?.from, coordinate?.intermediateStops[0]);
+        this.initializeMap(coordinate?.intermediateStops[coordinate?.intermediateStops.length - 1], coordinate?.to);
+
+        for(let i = 0; i < (coordinate?.intermediateStops?.length ?? 0); i++){
+          this.initializeMap(coordinate?.intermediateStops[i], coordinate?.intermediateStops[i+1]);
+        }
+
+        this.distanceInKm.emit(this.distanceInKmVal);
+
       }
     })
   }
@@ -56,8 +78,6 @@ export class MapFeatureComponent implements OnInit {
   }
 
   initializeMap(from?: { lat: number | string, lon: number | string }, to?: { lat: number | string, lon: number | string }): void {
-    this.removeDynamicLayers(); // 🔹 Rimuove i vecchi marker e route
-
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
         const userLon = position.coords.longitude;
@@ -120,7 +140,6 @@ export class MapFeatureComponent implements OnInit {
 
   // 🔹 **Funzione per calcolare e disegnare il percorso**
   drawRoute(startLon: number, startLat: number, endLonLat: number[]): void {
-    this.distanceInKm.emit(0)
     this.restService.getOsrmRoute(startLon, startLat, endLonLat[0], endLonLat[1]).subscribe(data => {
       if (data && 'routes' in data && data.routes && data.routes.length > 0) {
 
@@ -140,7 +159,7 @@ export class MapFeatureComponent implements OnInit {
         // 🔹 **Stile del percorso**
         const routeStyle = new Style({
           stroke: new Stroke({
-            color: '#0066cc',
+            color: this.getRandomColor(),
             width: 4
           })
         });
@@ -162,7 +181,7 @@ export class MapFeatureComponent implements OnInit {
         // 🔹 **Centra la mappa sul percorso**
         const extent = routeLine.getExtent();
         this.map?.getView().fit(extent, { padding: [50, 50, 50, 50] });
-        this.distanceInKm.emit(+(data.routes[0].distance / 1000).toFixed(2))
+        this.distanceInKmVal += (+(data.routes[0].distance / 1000).toFixed(2))
       } else {
         console.warn('Nessun percorso trovato.');
       }
@@ -197,5 +216,9 @@ export class MapFeatureComponent implements OnInit {
       coordinates.push([lng / 1e5, lat / 1e5]);
     }
     return coordinates;
+  }
+
+  getRandomColor(): string {
+    return `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
   }
 }
