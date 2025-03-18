@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, input, output, ViewChild } from '@angular/core';
-import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, input, output, ViewChild } from '@angular/core';
+import { FormArray, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatAutocomplete, MatAutocompleteModule } from '@angular/material/autocomplete';
@@ -18,7 +18,8 @@ export class InputUiComponent {
   @ViewChild(MatAutocomplete, { static: false }) auto!: MatAutocomplete;
 
   public formSignal = input<FormGroup>();
-  public controlName = input<string>();
+  public formArrayNameSignal = input<string>();
+  public controlName = input<string | number | null>();
   public label = input<string>();
   public type = input<string>();
   public isAutocomplete = input<boolean>();
