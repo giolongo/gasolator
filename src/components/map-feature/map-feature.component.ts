@@ -28,7 +28,7 @@ export class MapFeatureComponent implements OnInit {
 
   private dynamicLayers: VectorLayer<VectorSource>[] = [];
 
-  coordinate = input<DistanceModel>();
+  coordinate = input<{coordinate: DistanceModel, isRoundTrip: boolean}>();
 
 
   distanceInKm = output<number>();
@@ -42,9 +42,9 @@ export class MapFeatureComponent implements OnInit {
       this.distanceInKm.emit(0)
       this.distanceInKmVal = 0;
       const promises = [];
-      if (this.coordinate()?.from && this.coordinate()?.to) {
+      if (this.coordinate()?.coordinate.from && this.coordinate()?.coordinate.to) {
         this.removeDynamicLayers(); // 🔹 Rimuove i vecchi marker e route
-        const coordinate = this.coordinate();
+        const coordinate = this.coordinate()?.coordinate;
         if (!coordinate?.intermediateStops || coordinate.intermediateStops.length === 0) {
           const promise = this.initializeMap(coordinate?.from, coordinate?.to);
           if (promise) {
@@ -56,6 +56,22 @@ export class MapFeatureComponent implements OnInit {
 
           for (let i = 0; i < (coordinate?.intermediateStops?.length ?? 0); i++) {
             promises.push(this.initializeMap(coordinate?.intermediateStops[i], coordinate?.intermediateStops[i + 1]));
+          }
+        }
+        if(this.coordinate()?.isRoundTrip){
+          const coordinate = this.coordinate()?.coordinate;
+          if (!coordinate?.intermediateStops || coordinate.intermediateStops.length === 0) {
+            const promise = this.initializeMap(coordinate?.to, coordinate?.from);
+            if (promise) {
+              promises.push(promise);
+            }
+          } else {
+            promises.push(this.initializeMap(coordinate?.to, coordinate?.intermediateStops[coordinate?.intermediateStops.length - 1]));
+            promises.push(this.initializeMap(coordinate?.intermediateStops[coordinate?.intermediateStops.length - 0], coordinate?.from));
+  
+            for (let i = coordinate?.intermediateStops.length - 1; i < (coordinate?.intermediateStops?.length ?? 0); i--) {
+              promises.push(this.initializeMap(coordinate?.intermediateStops[i], coordinate?.intermediateStops[i - 1]));
+            }
           }
         }
         combineLatest(promises.filter(p => !!p)).subscribe({
