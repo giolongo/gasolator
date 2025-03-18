@@ -4,7 +4,7 @@ import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
 import { fromLonLat } from 'ol/proj';
-import { Feature } from 'ol';
+import { Feature, Overlay } from 'ol';
 import { Point, LineString } from 'ol/geom';
 import { Icon, Style, Stroke, Fill } from 'ol/style';
 import { Vector as VectorLayer } from 'ol/layer';
@@ -13,6 +13,7 @@ import { RestService } from '../../services/rest.service';
 import { DistanceModel, OsrmRoute } from '../../models';
 import { CommonModule } from '@angular/common';
 import { combineLatest, Observable, switchMap, tap } from 'rxjs';
+import { createEmpty, extend, Extent } from 'ol/extent';
 
 @Component({
   selector: 'app-map-feature',
@@ -22,6 +23,8 @@ import { combineLatest, Observable, switchMap, tap } from 'rxjs';
 })
 export class MapFeatureComponent implements OnInit {
   private restService = inject(RestService);
+
+  private combinedExtent: Extent = createEmpty();
 
   private dynamicLayers: VectorLayer<VectorSource>[] = [];
 
@@ -40,24 +43,31 @@ export class MapFeatureComponent implements OnInit {
       this.distanceInKmVal = 0;
       const promises = [];
       if (this.coordinate()?.from && this.coordinate()?.to) {
-        debugger
         this.removeDynamicLayers(); // 🔹 Rimuove i vecchi marker e route
         const coordinate = this.coordinate();
         if (!coordinate?.intermediateStops || coordinate.intermediateStops.length === 0) {
           const promise = this.initializeMap(coordinate?.from, coordinate?.to);
-          if(promise) {
+          if (promise) {
             promises.push(promise);
           }
-        }else{
+        } else {
           promises.push(this.initializeMap(coordinate?.from, coordinate?.intermediateStops[0]));
           promises.push(this.initializeMap(coordinate?.intermediateStops[coordinate?.intermediateStops.length - 1], coordinate?.to));
-  
+
           for (let i = 0; i < (coordinate?.intermediateStops?.length ?? 0); i++) {
             promises.push(this.initializeMap(coordinate?.intermediateStops[i], coordinate?.intermediateStops[i + 1]));
           }
         }
         combineLatest(promises.filter(p => !!p)).subscribe({
-          next: () => this.distanceInKm.emit(this.distanceInKmVal)
+          next: () => {
+
+            if (this.map) {
+              this.map.getView().fit(this.combinedExtent, { padding: [50, 50, 50, 50] });
+            }
+
+            this.distanceInKm.emit(this.distanceInKmVal);
+            this.combinedExtent = createEmpty()
+          }
         })
       }
     })
@@ -81,7 +91,7 @@ export class MapFeatureComponent implements OnInit {
     this.initializeMap()?.subscribe;
   }
 
-  initializeMap(from?: { lat: number | string, lon: number | string }, to?: { lat: number | string, lon: number | string }): Observable<OsrmRoute> | void {
+  initializeMap(from?: { lat: number | string, lon: number | string, name: string }, to?: { lat: number | string, lon: number | string, name: string }): Observable<OsrmRoute> | void {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
         const userLon = position.coords.longitude;
@@ -96,7 +106,7 @@ export class MapFeatureComponent implements OnInit {
 
     if (from && to) {
       this.addMarkers(+from.lon, +from.lat, +to.lon, +to.lat);
-      return this.drawRoute(+from.lon, +from.lat, [+to.lon, +to.lat]);
+      return this.drawRoute(+from.lon, +from.lat, [+to.lon, +to.lat], from.name, to.name);
     }
   }
 
@@ -143,7 +153,7 @@ export class MapFeatureComponent implements OnInit {
   }
 
   // 🔹 **Funzione per calcolare e disegnare il percorso**
-  drawRoute(startLon: number, startLat: number, endLonLat: number[]): Observable<OsrmRoute> {
+  drawRoute(startLon: number, startLat: number, endLonLat: number[], from: string, to: string): Observable<OsrmRoute> {
     return this.restService.getOsrmRoute(startLon, startLat, endLonLat[0], endLonLat[1])
       .pipe(tap(data => {
         if (data && 'routes' in data && data.routes && data.routes.length > 0) {
@@ -151,26 +161,19 @@ export class MapFeatureComponent implements OnInit {
           const route = data.routes[0].geometry;
           const coordinates = this.decodePolyline(route);
 
-          // 🔹 **Converti le coordinate in formato OpenLayers**
           const transformedCoordinates = coordinates.map(coord => fromLonLat(coord));
-
-          // 🔹 **Crea la LineString del percorso**
           const routeLine = new LineString(transformedCoordinates);
-
-          // 🔹 **Crea un Feature per il percorso**
           const routeFeature = new Feature(routeLine);
-
-          // 🔹 **Stile del percorso**
+          const color = this.getRandomColor();
           const routeStyle = new Style({
             stroke: new Stroke({
-              color: this.getRandomColor(),
+              color,
               width: 4
             })
           });
 
           routeFeature.setStyle(routeStyle);
 
-          // 🔹 **Crea un Vector Layer per il percorso**
           const routeSource = new VectorSource({
             features: [routeFeature]
           });
@@ -182,10 +185,39 @@ export class MapFeatureComponent implements OnInit {
           this.dynamicLayers.push(routeLayer);
           this.map?.addLayer(routeLayer);
 
-          // 🔹 **Centra la mappa sul percorso**
           const extent = routeLine.getExtent();
-          this.map?.getView().fit(extent, { padding: [50, 50, 50, 50] });
-          this.distanceInKmVal += (+(data.routes[0].distance / 1000).toFixed(2))
+          this.combinedExtent = extend(this.combinedExtent, extent);
+          // this.map?.getView().fit(extent, { padding: [50, 50, 50, 50] });
+          const distance = data.routes[0].distance;
+          this.distanceInKmVal += (+(distance / 1000).toFixed(2));
+
+          // 🔹 **Aggiungi overlay tooltip**
+          const tooltipElement = document.createElement('div');
+          tooltipElement.className = 'ol-tooltip';
+          tooltipElement.style.cssText = `background: ${this.hexToRgba(color)}; color: white; padding: 5px 10px; border-radius: 4px; white-space: nowrap;`;
+
+          const tooltipOverlay = new Overlay({
+            element: tooltipElement,
+            offset: [10, 0],
+            positioning: 'bottom-left',
+            stopEvent: false
+          });
+
+          this.map?.addOverlay(tooltipOverlay);
+
+          // 🔹 **Evento hover sulla linea**
+          this.map?.on('pointermove', (evt) => {
+            const feature = this.map?.forEachFeatureAtPixel(evt.pixel, (f) => f);
+            if (feature === routeFeature) {
+              const coordinate = evt.coordinate;
+              tooltipElement.innerHTML = `<div style="text-align: left; font-size:.75rem"><div>From ${from}</div> <div>To ${to}</div> <div>Distance: ${(distance / 1000).toFixed(2)} km</div></div>`;
+              tooltipOverlay.setPosition(coordinate);
+              tooltipElement.style.display = 'block';
+            } else {
+              tooltipElement.style.display = 'none';
+            }
+          });
+
         } else {
           console.warn('Nessun percorso trovato.');
         }
@@ -224,5 +256,21 @@ export class MapFeatureComponent implements OnInit {
 
   getRandomColor(): string {
     return `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
+  }
+
+  hexToRgba(hex: string): string {
+    // Rimuove il simbolo "#" se presente
+    hex = hex.replace('#', '');
+
+    // Supporta formato breve (#f00)
+    if (hex.length === 3) {
+      hex = hex.split('').map(char => char + char).join('');
+    }
+
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+
+    return `rgba(${r}, ${g}, ${b}, ${0.7})`;
   }
 }

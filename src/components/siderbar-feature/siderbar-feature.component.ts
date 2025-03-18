@@ -117,15 +117,18 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
     this.fromLatLng = {
       lat: this.itineraryForm?.get(this.fromFormName)?.value.lat,
       lon: this.itineraryForm?.get(this.fromFormName)?.value.lon,
+      name: this.itineraryForm?.get(this.fromFormName)?.value.display_name
     }
     this.toLatLng = {
       lat: this.itineraryForm?.get(this.toFormName)?.value.lat,
       lon: this.itineraryForm?.get(this.toFormName)?.value.lon,
+      name: this.itineraryForm?.get(this.toFormName)?.value.display_name
     }
     this.intermediateStops?.controls.forEach(c => {
       intermediateStops.push({
         lat: c.value.lat,
-        lon: c.value.lon
+        lon: c.value.lon,
+        name: c.value.display_name
       })
     })
     this.exceuteCalculate.emit({ from: this.fromLatLng, to: this.toLatLng, intermediateStops })
@@ -148,13 +151,11 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
   }
 
   addStop() {
-    debugger
     this.intermediateStops?.push(this.fb.control('', [Validators.required, autocompleteValidator()]));
   }
 
   handleIntermediateStopsChanges(): void {
     this.intermediateStops.controls.forEach((control, index) => {
-      debugger
       if (!control.valueChanges) return; // Evita errori se il controllo non ha valueChanges
       
       control.valueChanges.pipe(
@@ -176,7 +177,6 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
     })).subscribe(val => this.mapFormControlNameNominationSuggest[this.toFormName] = val = val)
 
     this.intermediateStops.valueChanges.pipe(debounceTime(500)).subscribe(() => {
-      debugger
       this.handleIntermediateStopsChanges();
     });
   }
