@@ -66,11 +66,12 @@ export class MapFeatureComponent implements OnInit {
               promises.push(promise);
             }
           } else {
+            debugger
             promises.push(this.initializeMap(coordinate?.to, coordinate?.intermediateStops[coordinate?.intermediateStops.length - 1]));
-            promises.push(this.initializeMap(coordinate?.intermediateStops[coordinate?.intermediateStops.length - 0], coordinate?.from));
+            promises.push(this.initializeMap(coordinate?.intermediateStops[0], coordinate?.from));
   
-            for (let i = coordinate?.intermediateStops.length - 1; i < (coordinate?.intermediateStops?.length ?? 0); i--) {
-              promises.push(this.initializeMap(coordinate?.intermediateStops[i], coordinate?.intermediateStops[i - 1]));
+            for (let i = 0; i < (coordinate?.intermediateStops?.length ?? 0); i++) {
+              promises.push(this.initializeMap(coordinate?.intermediateStops.reverse()[i], coordinate?.intermediateStops.reverse()[i + 1]));
             }
           }
         }
