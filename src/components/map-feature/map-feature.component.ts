@@ -10,8 +10,9 @@ import { Icon, Style, Stroke, Fill } from 'ol/style';
 import { Vector as VectorLayer } from 'ol/layer';
 import { Vector as VectorSource } from 'ol/source';
 import { RestService } from '../../services/rest.service';
-import { DistanceModel } from '../../models';
+import { DistanceModel, OsrmRoute } from '../../models';
 import { CommonModule } from '@angular/common';
+import { combineLatest, Observable, switchMap, tap } from 'rxjs';
 
 @Component({
   selector: 'app-map-feature',
@@ -35,26 +36,29 @@ export class MapFeatureComponent implements OnInit {
 
   constructor() {
     effect(() => {
-      debugger
       this.distanceInKm.emit(0)
       this.distanceInKmVal = 0;
+      const promises = [];
       if (this.coordinate()?.from && this.coordinate()?.to) {
         debugger
         this.removeDynamicLayers(); // 🔹 Rimuove i vecchi marker e route
         const coordinate = this.coordinate();
-        if(!coordinate?.intermediateStops || coordinate.intermediateStops.length === 0){
-          this.initializeMap(coordinate?.from, coordinate?.to);
-          return;
+        if (!coordinate?.intermediateStops || coordinate.intermediateStops.length === 0) {
+          const promise = this.initializeMap(coordinate?.from, coordinate?.to);
+          if(promise) {
+            promises.push(promise);
+          }
+        }else{
+          promises.push(this.initializeMap(coordinate?.from, coordinate?.intermediateStops[0]));
+          promises.push(this.initializeMap(coordinate?.intermediateStops[coordinate?.intermediateStops.length - 1], coordinate?.to));
+  
+          for (let i = 0; i < (coordinate?.intermediateStops?.length ?? 0); i++) {
+            promises.push(this.initializeMap(coordinate?.intermediateStops[i], coordinate?.intermediateStops[i + 1]));
+          }
         }
-        this.initializeMap(coordinate?.from, coordinate?.intermediateStops[0]);
-        this.initializeMap(coordinate?.intermediateStops[coordinate?.intermediateStops.length - 1], coordinate?.to);
-
-        for(let i = 0; i < (coordinate?.intermediateStops?.length ?? 0); i++){
-          this.initializeMap(coordinate?.intermediateStops[i], coordinate?.intermediateStops[i+1]);
-        }
-
-        this.distanceInKm.emit(this.distanceInKmVal);
-
+        combineLatest(promises.filter(p => !!p)).subscribe({
+          next: () => this.distanceInKm.emit(this.distanceInKmVal)
+        })
       }
     })
   }
@@ -74,10 +78,10 @@ export class MapFeatureComponent implements OnInit {
         zoom: 12
       })
     });
-    this.initializeMap();
+    this.initializeMap()?.subscribe;
   }
 
-  initializeMap(from?: { lat: number | string, lon: number | string }, to?: { lat: number | string, lon: number | string }): void {
+  initializeMap(from?: { lat: number | string, lon: number | string }, to?: { lat: number | string, lon: number | string }): Observable<OsrmRoute> | void {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
         const userLon = position.coords.longitude;
@@ -92,7 +96,7 @@ export class MapFeatureComponent implements OnInit {
 
     if (from && to) {
       this.addMarkers(+from.lon, +from.lat, +to.lon, +to.lat);
-      this.drawRoute(+from.lon, +from.lat, [+to.lon, +to.lat]);
+      return this.drawRoute(+from.lon, +from.lat, [+to.lon, +to.lat]);
     }
   }
 
@@ -139,53 +143,53 @@ export class MapFeatureComponent implements OnInit {
   }
 
   // 🔹 **Funzione per calcolare e disegnare il percorso**
-  drawRoute(startLon: number, startLat: number, endLonLat: number[]): void {
-    this.restService.getOsrmRoute(startLon, startLat, endLonLat[0], endLonLat[1]).subscribe(data => {
-      if (data && 'routes' in data && data.routes && data.routes.length > 0) {
+  drawRoute(startLon: number, startLat: number, endLonLat: number[]): Observable<OsrmRoute> {
+    return this.restService.getOsrmRoute(startLon, startLat, endLonLat[0], endLonLat[1])
+      .pipe(tap(data => {
+        if (data && 'routes' in data && data.routes && data.routes.length > 0) {
 
+          const route = data.routes[0].geometry;
+          const coordinates = this.decodePolyline(route);
 
-        const route = data.routes[0].geometry;
-        const coordinates = this.decodePolyline(route);
+          // 🔹 **Converti le coordinate in formato OpenLayers**
+          const transformedCoordinates = coordinates.map(coord => fromLonLat(coord));
 
-        // 🔹 **Converti le coordinate in formato OpenLayers**
-        const transformedCoordinates = coordinates.map(coord => fromLonLat(coord));
+          // 🔹 **Crea la LineString del percorso**
+          const routeLine = new LineString(transformedCoordinates);
 
-        // 🔹 **Crea la LineString del percorso**
-        const routeLine = new LineString(transformedCoordinates);
+          // 🔹 **Crea un Feature per il percorso**
+          const routeFeature = new Feature(routeLine);
 
-        // 🔹 **Crea un Feature per il percorso**
-        const routeFeature = new Feature(routeLine);
+          // 🔹 **Stile del percorso**
+          const routeStyle = new Style({
+            stroke: new Stroke({
+              color: this.getRandomColor(),
+              width: 4
+            })
+          });
 
-        // 🔹 **Stile del percorso**
-        const routeStyle = new Style({
-          stroke: new Stroke({
-            color: this.getRandomColor(),
-            width: 4
-          })
-        });
+          routeFeature.setStyle(routeStyle);
 
-        routeFeature.setStyle(routeStyle);
+          // 🔹 **Crea un Vector Layer per il percorso**
+          const routeSource = new VectorSource({
+            features: [routeFeature]
+          });
 
-        // 🔹 **Crea un Vector Layer per il percorso**
-        const routeSource = new VectorSource({
-          features: [routeFeature]
-        });
+          const routeLayer = new VectorLayer({
+            source: routeSource
+          });
 
-        const routeLayer = new VectorLayer({
-          source: routeSource
-        });
+          this.dynamicLayers.push(routeLayer);
+          this.map?.addLayer(routeLayer);
 
-        this.dynamicLayers.push(routeLayer);
-        this.map?.addLayer(routeLayer);
-
-        // 🔹 **Centra la mappa sul percorso**
-        const extent = routeLine.getExtent();
-        this.map?.getView().fit(extent, { padding: [50, 50, 50, 50] });
-        this.distanceInKmVal += (+(data.routes[0].distance / 1000).toFixed(2))
-      } else {
-        console.warn('Nessun percorso trovato.');
-      }
-    }, (error) => console.error)
+          // 🔹 **Centra la mappa sul percorso**
+          const extent = routeLine.getExtent();
+          this.map?.getView().fit(extent, { padding: [50, 50, 50, 50] });
+          this.distanceInKmVal += (+(data.routes[0].distance / 1000).toFixed(2))
+        } else {
+          console.warn('Nessun percorso trovato.');
+        }
+      }));
   }
 
   // 🔹 **Funzione per decodificare la geometria Polyline**
