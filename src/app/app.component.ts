@@ -18,7 +18,7 @@ import { DistanceModel } from '../models/distance.model';
 })
 export class AppComponent implements OnInit {
   title = 'gasolator';
-  coordinate?: DistanceModel;
+  coordinate?: {coordinate: DistanceModel, isRoundTrip: boolean};
   distanceKm: number = 0;  
 
   private restService = inject(RestService);
@@ -48,8 +48,8 @@ export class AppComponent implements OnInit {
     })
   }
 
-  calculateRoute(coordinate: DistanceModel) {
-    this.coordinate = coordinate
+  calculateRoute(coordinateBean: {coordinate: DistanceModel, isRoundTrip: boolean}) {
+    this.coordinate = coordinateBean
     this.drawer.close()
   }
 

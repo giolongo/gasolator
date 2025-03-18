@@ -18,7 +18,7 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
   private fb = inject(FormBuilder);
   private restService = inject(RestService);
 
-  protected exceuteCalculate = output<DistanceModel>();
+  protected exceuteCalculate = output<{coordinate: DistanceModel, isRoundTrip: boolean}>();
   protected travelMessage = output<string>();
   public distanceKm = input<number>();
 
@@ -59,14 +59,14 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
         if (kmType === 'lKm') {
           consumption = costLKm + 'l/100km';
           travelCost =
-            +((isRoundTrip ? distanceKmVal * 2 : distanceKmVal) / 100).toFixed(2) *
+            +(distanceKmVal / 100).toFixed(2) *
             costLKm *
             fuelCost +
             costForDay;
         } else {
           consumption = costKmL + 'km/l';
           travelCost =
-            +((isRoundTrip ? distanceKmVal * 2 : distanceKmVal) / (costKmL)).toFixed(2) *
+            +((distanceKmVal) / (costKmL)).toFixed(2) *
             fuelCost +
             costForDay;
         }
@@ -74,11 +74,7 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
           travelCost = 0;
         }
 
-        if (isRoundTrip) {
-          this.travelMessage.emit(`The trip is ${distanceKmVal * 2} km (${distanceKmVal} km for journey ) will cost €${(+travelCost).toFixed(2)}, considering the fuel cost (€${fuelCost}), vehicle wear (€${costForDay}), and average fuel consumption (${consumption}). The price does not include extra transport costs.`)
-        } else {
-          this.travelMessage.emit(`The trip of ${distanceKmVal} km will cost €${(+travelCost).toFixed(2)}, considering the fuel cost (€${fuelCost}), vehicle wear (€${costForDay}), and average fuel consumption (${consumption}). The price does not include extra transport costs.`)
-        }
+        this.travelMessage.emit(`The trip of ${distanceKmVal.toFixed(2)} km will cost €${(+travelCost).toFixed(2)}, considering the fuel cost (€${fuelCost}), vehicle wear (€${costForDay}), and average fuel consumption (${consumption}). The price does not include extra transport costs.`)
 
       }
     })
@@ -131,7 +127,7 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
         name: c.value.display_name
       })
     })
-    this.exceuteCalculate.emit({ from: this.fromLatLng, to: this.toLatLng, intermediateStops })
+    this.exceuteCalculate.emit({ coordinate: {from: this.fromLatLng, to: this.toLatLng, intermediateStops}, isRoundTrip: this.gasolatorForm?.get(this.roundTripControlName)?.value })
   }
 
   get intermediateStops(): FormArray {
