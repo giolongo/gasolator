@@ -1,1 +1,5 @@
+<button *ngIf="coordinate()?.isRoundTrip"
+  (click)="isGone$.next(!isGone$.value)" 
+  [ngClass]="isGone$.value ? 'go' : 'return'">
+</button>
 <div id="map" class="map-container"></div>

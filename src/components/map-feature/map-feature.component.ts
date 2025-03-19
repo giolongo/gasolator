@@ -1,4 +1,4 @@
-import { Component, effect, EventEmitter, inject, input, OnInit, Output, output } from '@angular/core';
+import { Component, effect, EventEmitter, inject, input, OnInit, Output, output, signal } from '@angular/core';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
@@ -12,7 +12,7 @@ import { Vector as VectorSource } from 'ol/source';
 import { RestService } from '../../services/rest.service';
 import { DistanceModel, OsrmRoute } from '../../models';
 import { CommonModule } from '@angular/common';
-import { combineLatest, Observable, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, combineLatest, Observable, Subject, switchMap, tap } from 'rxjs';
 import { createEmpty, extend, Extent } from 'ol/extent';
 
 @Component({
@@ -22,13 +22,16 @@ import { createEmpty, extend, Extent } from 'ol/extent';
   styleUrls: ['./map-feature.component.scss']
 })
 export class MapFeatureComponent implements OnInit {
+
+  public isGone$ = new BehaviorSubject<boolean>(true);
+
   private restService = inject(RestService);
 
   private combinedExtent: Extent = createEmpty();
 
   private dynamicLayers: VectorLayer<VectorSource>[] = [];
 
-  coordinate = input<{coordinate: DistanceModel, isRoundTrip: boolean}>();
+  coordinate = input<{ coordinate: DistanceModel, isRoundTrip: boolean }>();
 
 
   distanceInKm = output<number>();
@@ -46,42 +49,40 @@ export class MapFeatureComponent implements OnInit {
         this.removeDynamicLayers(); // 🔹 Rimuove i vecchi marker e route
         const coordinate = this.coordinate()?.coordinate;
         if (!coordinate?.intermediateStops || coordinate.intermediateStops.length === 0) {
-          const promise = this.initializeMap(coordinate?.from, coordinate?.to);
+          const promise = this.initializeMap(coordinate?.from, coordinate?.to, true);
           if (promise) {
             promises.push(promise);
           }
         } else {
-          promises.push(this.initializeMap(coordinate?.from, coordinate?.intermediateStops[0]));
-          promises.push(this.initializeMap(coordinate?.intermediateStops[coordinate?.intermediateStops.length - 1], coordinate?.to));
+          promises.push(this.initializeMap(coordinate?.from, coordinate?.intermediateStops[0], true));
+          promises.push(this.initializeMap(coordinate?.intermediateStops[coordinate?.intermediateStops.length - 1], coordinate?.to, true));
 
           for (let i = 0; i < (coordinate?.intermediateStops?.length ?? 0); i++) {
-            promises.push(this.initializeMap(coordinate?.intermediateStops[i], coordinate?.intermediateStops[i + 1]));
+            promises.push(this.initializeMap(coordinate?.intermediateStops[i], coordinate?.intermediateStops[i + 1], true));
           }
         }
-        if(this.coordinate()?.isRoundTrip){
+        if (this.coordinate()?.isRoundTrip) {
           const coordinate = this.coordinate()?.coordinate;
           if (!coordinate?.intermediateStops || coordinate.intermediateStops.length === 0) {
-            const promise = this.initializeMap(coordinate?.to, coordinate?.from);
+            const promise = this.initializeMap(coordinate?.to, coordinate?.from, false);
             if (promise) {
               promises.push(promise);
             }
           } else {
-            debugger
-            promises.push(this.initializeMap(coordinate?.to, coordinate?.intermediateStops[coordinate?.intermediateStops.length - 1]));
+            promises.push(this.initializeMap(coordinate?.to, coordinate?.intermediateStops[coordinate?.intermediateStops.length - 1], false));
             promises.push(this.initializeMap(coordinate?.intermediateStops[0], coordinate?.from));
-  
+
             for (let i = 0; i < (coordinate?.intermediateStops?.length ?? 0); i++) {
-              promises.push(this.initializeMap(coordinate?.intermediateStops.reverse()[i], coordinate?.intermediateStops.reverse()[i + 1]));
+              promises.push(this.initializeMap(coordinate?.intermediateStops.reverse()[i], coordinate?.intermediateStops.reverse()[i + 1], false));
             }
           }
         }
         combineLatest(promises.filter(p => !!p)).subscribe({
           next: () => {
-
             if (this.map) {
               this.map.getView().fit(this.combinedExtent, { padding: [50, 50, 50, 50] });
             }
-
+            this.showGoneOrReturn();
             this.distanceInKm.emit(this.distanceInKmVal);
             this.combinedExtent = createEmpty()
           }
@@ -106,9 +107,10 @@ export class MapFeatureComponent implements OnInit {
       })
     });
     this.initializeMap()?.subscribe;
+    this.isGone$.subscribe(() => this.showGoneOrReturn())
   }
 
-  initializeMap(from?: { lat: number | string, lon: number | string, name: string }, to?: { lat: number | string, lon: number | string, name: string }): Observable<OsrmRoute> | void {
+  initializeMap(from?: { lat: number | string, lon: number | string, name: string }, to?: { lat: number | string, lon: number | string, name: string }, isGone?: boolean): Observable<OsrmRoute> | void {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
         const userLon = position.coords.longitude;
@@ -123,7 +125,7 @@ export class MapFeatureComponent implements OnInit {
 
     if (from && to) {
       this.addMarkers(+from.lon, +from.lat, +to.lon, +to.lat);
-      return this.drawRoute(+from.lon, +from.lat, [+to.lon, +to.lat], from.name, to.name);
+      return this.drawRoute(+from.lon, +from.lat, [+to.lon, +to.lat], from.name, to.name, isGone ?? true);
     }
   }
 
@@ -169,8 +171,17 @@ export class MapFeatureComponent implements OnInit {
     this.map?.addLayer(vectorLayer);
   }
 
+  showGoneOrReturn() {
+    this.map?.getLayers().forEach(l => {
+      const isGoneProperties = l.getProperties()['isGone']
+      if (isGoneProperties != null) {
+        l.setZIndex(isGoneProperties !== this.isGone$.value ? -1 : 50)
+      }
+    });
+  }
+
   // 🔹 **Funzione per calcolare e disegnare il percorso**
-  drawRoute(startLon: number, startLat: number, endLonLat: number[], from: string, to: string): Observable<OsrmRoute> {
+  drawRoute(startLon: number, startLat: number, endLonLat: number[], from: string, to: string, isGone: boolean): Observable<OsrmRoute> {
     return this.restService.getOsrmRoute(startLon, startLat, endLonLat[0], endLonLat[1])
       .pipe(tap(data => {
         if (data && 'routes' in data && data.routes && data.routes.length > 0) {
@@ -185,8 +196,8 @@ export class MapFeatureComponent implements OnInit {
           const routeStyle = new Style({
             stroke: new Stroke({
               color,
-              width: 4
-            })
+              width: 4,
+            }),
           });
 
           routeFeature.setStyle(routeStyle);
@@ -196,7 +207,8 @@ export class MapFeatureComponent implements OnInit {
           });
 
           const routeLayer = new VectorLayer({
-            source: routeSource
+            source: routeSource,
+            properties: { isGone }
           });
 
           this.dynamicLayers.push(routeLayer);
