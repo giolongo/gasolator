@@ -72,7 +72,7 @@ export class MapFeatureComponent implements OnInit {
             }
           } else {
             promises.push(this.initializeMap(coordinate?.to, coordinate?.intermediateStops[coordinate?.intermediateStops.length - 1], false));
-            promises.push(this.initializeMap(coordinate?.intermediateStops[0], coordinate?.from));
+            promises.push(this.initializeMap(coordinate?.intermediateStops[0], coordinate?.from, false));
 
             for (let i = 0; i < (coordinate?.intermediateStops?.length ?? 0); i++) {
               promises.push(this.initializeMap(coordinate?.intermediateStops.reverse()[i], coordinate?.intermediateStops.reverse()[i + 1], false));
@@ -130,7 +130,8 @@ export class MapFeatureComponent implements OnInit {
 
     if (from && to) {
       this.addMarkers(+from.lon, +from.lat, +to.lon, +to.lat);
-      return this.drawRoute(+from.lon, +from.lat, [+to.lon, +to.lat], from.name, to.name, isGone ?? true);
+      debugger
+      return this.drawRoute(+from.lon, +from.lat, [+to.lon, +to.lat], from.name, to.name, isGone != null ? isGone : true);
     }
   }
 
@@ -177,6 +178,7 @@ export class MapFeatureComponent implements OnInit {
   }
 
   showGoneOrReturn() {
+    debugger
     this.map?.getLayers().forEach(l => {
       const isGoneProperties = l.getProperties()['isGone']
       if (isGoneProperties != null) {
@@ -210,6 +212,8 @@ export class MapFeatureComponent implements OnInit {
           const routeSource = new VectorSource({
             features: [routeFeature]
           });
+
+          debugger
 
           const routeLayer = new VectorLayer({
             source: routeSource,
