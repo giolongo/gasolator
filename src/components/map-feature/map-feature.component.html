@@ -1,1 +1,4 @@
+<button *ngIf="coordinate()?.isRoundTrip" mat-raised-button [matTooltip]="tooltipButtonMessage"
+  (click)="isGone$.next(!isGone$.value)" [ngClass]="isGone$.value ? 'go' : 'return'">
+</button>
 <div id="map" class="map-container"></div>
