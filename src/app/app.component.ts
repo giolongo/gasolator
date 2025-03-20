@@ -46,6 +46,13 @@ export class AppComponent implements OnInit {
     this.drawer.closedStart.subscribe(() => {
       this.updateSidebarSignal(false)
     })
+    this.setViewportHeight();
+    window.addEventListener('resize', this.setViewportHeight);
+  }
+
+  setViewportHeight() {
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
   }
 
   calculateRoute(coordinateBean: {coordinate: DistanceModel, isRoundTrip: boolean}) {
