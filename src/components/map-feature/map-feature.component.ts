@@ -1,29 +1,31 @@
-import { Component, effect, EventEmitter, inject, input, OnInit, Output, output, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, effect, inject, input, OnInit, output } from '@angular/core';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { Feature, Overlay } from 'ol';
 import Map from 'ol/Map';
 import View from 'ol/View';
-import TileLayer from 'ol/layer/Tile';
-import OSM from 'ol/source/OSM';
-import { fromLonLat } from 'ol/proj';
-import { Feature, Overlay } from 'ol';
-import { Point, LineString } from 'ol/geom';
-import { Icon, Style, Stroke, Fill } from 'ol/style';
-import { Vector as VectorLayer } from 'ol/layer';
-import { Vector as VectorSource } from 'ol/source';
-import { RestService } from '../../services/rest.service';
-import { DistanceModel, OsrmRoute } from '../../models';
-import { CommonModule } from '@angular/common';
-import { BehaviorSubject, combineLatest, Observable, Subject, switchMap, tap } from 'rxjs';
 import { createEmpty, extend, Extent } from 'ol/extent';
+import { LineString, Point } from 'ol/geom';
+import { Vector as VectorLayer } from 'ol/layer';
+import TileLayer from 'ol/layer/Tile';
+import { fromLonLat } from 'ol/proj';
+import { Vector as VectorSource } from 'ol/source';
+import OSM from 'ol/source/OSM';
+import { Icon, Stroke, Style } from 'ol/style';
+import { BehaviorSubject, combineLatest, Observable, tap } from 'rxjs';
+import { DistanceModel, OsrmRoute } from '../../models';
+import { RestService } from '../../services/rest.service';
 
 @Component({
   selector: 'app-map-feature',
-  imports: [CommonModule],
+  imports: [CommonModule, MatTooltipModule],
   templateUrl: './map-feature.component.html',
   styleUrls: ['./map-feature.component.scss']
 })
 export class MapFeatureComponent implements OnInit {
 
   public isGone$ = new BehaviorSubject<boolean>(true);
+  public tooltipButtonMessage: 'Gone' | 'Return' = 'Gone';
 
   private restService = inject(RestService);
 
@@ -107,7 +109,10 @@ export class MapFeatureComponent implements OnInit {
       })
     });
     this.initializeMap()?.subscribe;
-    this.isGone$.subscribe(() => this.showGoneOrReturn())
+    this.isGone$.subscribe((val) => {
+      this.tooltipButtonMessage = val ? 'Gone' : 'Return';
+      this.showGoneOrReturn();
+    })
   }
 
   initializeMap(from?: { lat: number | string, lon: number | string, name: string }, to?: { lat: number | string, lon: number | string, name: string }, isGone?: boolean): Observable<OsrmRoute> | void {
