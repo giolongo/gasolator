@@ -5,7 +5,7 @@ html {
     min-height: 100%;
     overflow-x: hidden;
 }
-body { height: calc(var(--vh, 1vh) * 100); width: 100vw; margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+body { height: 100dvh; width: 100dvw; margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 .m-auto {
     margin: auto;
 }
