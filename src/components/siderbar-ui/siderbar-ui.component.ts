@@ -54,6 +54,7 @@ export class SiderbarUiComponent {
   protected exceuteCalculate = output<GasolatorModel>();
   protected changeKmCountType = output<'kmL' | 'lKm'>();
   protected addStop = output<void>();
+  protected deleteElement = output<number>();
 
 
 

@@ -2,9 +2,10 @@
     <form [formGroup]="form">
             <mat-form-field *ngIf="isAutocomplete()" appearance="outline" style="width: 100%;">
                 <mat-label>{{ label() }}</mat-label>
-                <div *ngIf="formArrayNameSignal() as formArrayNameVal" [formArrayName]="formArrayNameVal">
+                <div *ngIf="formArrayNameSignal() as formArrayNameVal" style="display: flex;" [formArrayName]="formArrayNameVal">
                     <input *ngIf="type() as type" matInput [type]="type" [id]="controlName()?.toString() ?? ''"
                         [formControlName]="controlName() ?? ''" [matAutocomplete]="auto">
+                        <mat-icon (click)="$event.stopPropagation(); deleteElement.emit()" style="margin-right: .5rem; color: rgb(167, 17, 17); cursor: pointer;" matSuffix>delete</mat-icon>
                     <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete" [displayWith]="getOptionText">
                         @for (option of suggest(); track option) {
                         <mat-option [value]="option">{{option.display_name}}</mat-option>

@@ -49,7 +49,6 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
       if (distanceKmVal && distanceKmVal > 0) {
         let travelCost = 0;
         let consumption;
-        const isRoundTrip = this.gasolatorForm?.get(this.roundTripControlName)?.value;
         const kmType = this.gasolatorForm?.get(this.selectKmTypeName)?.value;
         const costLKm = +this.gasolatorForm?.get(this.costLKmFormControlName)?.value;
         const costKmL = +this.gasolatorForm?.get(this.costKmLFormControlName)?.value;
@@ -161,6 +160,10 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
         switchMap(val => this.restService.searchAddress(val))
       ).subscribe(val => this.mapFormControlNameNominationSuggest[index] = val);
     });
+  }
+
+  deleteElement(index: number) {
+    this.intermediateStops?.removeAt(index);
   }
 
   ngAfterViewInit(): void {

@@ -10,7 +10,7 @@
             <form *ngIf="itineraryForm() as iForm" [formGroup]="iForm">
                 <div *ngIf="intermediateStopsFormName() as nameArray">
                     <div [formArrayName]="nameArray" *ngFor="let stop of controls; let i = index">
-                        <app-input-ui [label]="'Stop '+(i+1) | titlecase" type="text" [controlName]="i" [isAutocomplete]="true" [formSignal]="itineraryForm()" 
+                        <app-input-ui (deleteElement)="deleteElement.emit(i)" [label]="'Stop '+(i+1) | titlecase" type="text" [controlName]="i" [isAutocomplete]="true" [formSignal]="itineraryForm()" 
                             [suggest]="mapFormControlNameNominationSuggest()?.[i] ?? []" [formArrayNameSignal]="nameArray"></app-input-ui>
                     </div>
                 </div>
