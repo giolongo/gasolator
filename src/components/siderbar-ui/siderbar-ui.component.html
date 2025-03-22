@@ -3,10 +3,25 @@
     <form *ngIf="formSignal() as form" [formGroup]="form" (ngSubmit)="onSubmit()">
         <mat-label>Round Trip</mat-label>
         <mat-slide-toggle *ngIf="roundTripControlName() as name" [formControlName]="name"></mat-slide-toggle>
+
         <app-input-ui *ngIf="fromFormControlName() as name" [label]="name | titlecase" type="text" [controlName]="name"
-            [isAutocomplete]="true" [suggest]="fromAutocompleteSuggest()" [formSignal]="form"></app-input-ui>
+            [formSignal]="itineraryForm()" [isAutocomplete]="true" [suggest]="mapFormControlNameNominationSuggest()?.[name] ?? []"></app-input-ui>
+        <div *ngIf="intermediateStopsForm()?.controls as controls">
+            <form *ngIf="itineraryForm() as iForm" [formGroup]="iForm">
+                <div *ngIf="intermediateStopsFormName() as nameArray">
+                    <div [formArrayName]="nameArray" *ngFor="let stop of controls; let i = index">
+                        <app-input-ui (deleteElement)="deleteElement.emit(i)" [label]="'Stop '+(i+1) | titlecase" type="text" [controlName]="i" [isAutocomplete]="true" [formSignal]="itineraryForm()" 
+                            [suggest]="mapFormControlNameNominationSuggest()?.[i] ?? []" [formArrayNameSignal]="nameArray"></app-input-ui>
+                    </div>
+                </div>
+            </form>
+        </div>
         <app-input-ui *ngIf="toFormControlName() as name" [label]="name | titlecase" type="text" [controlName]="name"
-            [isAutocomplete]="true" [suggest]="toAutocompleteSuggest()" [formSignal]="form"></app-input-ui>
+            [formSignal]="itineraryForm()" [isAutocomplete]="true" [suggest]="mapFormControlNameNominationSuggest()?.[name] ?? []"></app-input-ui>
+        <button type="button" style="margin-bottom: 1rem;" (click)="addStop.emit()" mat-stroked-button>Add intermediate
+            Stop</button>
+
+            
         <app-input-ui *ngIf="costForDayControlName() as name" label="Cost for travel (wear of the vehicle)"
             type="number" [controlName]="name" [formSignal]="form"></app-input-ui>
         <app-input-ui *ngIf="fuelCostControlName() as name" label="Fuel cost (€/l)" type="number" [controlName]="name"

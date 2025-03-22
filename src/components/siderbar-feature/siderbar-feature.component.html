@@ -1,6 +1,9 @@
 <app-siderbar-ui 
 [formSignal]="gasolatorForm" 
 [fromFormControlName]="fromFormName" 
+[itineraryForm]="itineraryForm" 
+[intermediateStopsForm]="intermediateStops" 
+[intermediateStopsFormName]="intermediateStopsFormName" 
 [toFormControlName]="toFormName"
 [costKmLFormControlName]="costKmLFormControlName"
 [costLKmFormControlName]="costLKmFormControlName"
@@ -8,8 +11,9 @@
 [costForDayControlName]="costForDayControlName"
 [fuelCostControlName]="fuelCostControlName"
 [roundTripControlName]="roundTripControlName"
-[fromAutocompleteSuggest]="fromAutocompleteSuggest"
-[toAutocompleteSuggest]="toAutocompleteSuggest"
+[mapFormControlNameNominationSuggest]="mapFormControlNameNominationSuggest"
 (exceuteCalculate)="calculateCost()"
+(addStop)="addStop()"
+(deleteElement)="deleteElement($event)"
 >
 </app-siderbar-ui>

@@ -18,7 +18,7 @@ import { DistanceModel } from '../models/distance.model';
 })
 export class AppComponent implements OnInit {
   title = 'gasolator';
-  coordinate?: DistanceModel;
+  coordinate?: {coordinate: DistanceModel, isRoundTrip: boolean};
   distanceKm: number = 0;  
 
   private restService = inject(RestService);
@@ -46,10 +46,17 @@ export class AppComponent implements OnInit {
     this.drawer.closedStart.subscribe(() => {
       this.updateSidebarSignal(false)
     })
+    this.setViewportHeight();
+    window.addEventListener('resize', this.setViewportHeight);
   }
 
-  calculateRoute(coordinate: DistanceModel) {
-    this.coordinate = coordinate
+  setViewportHeight() {
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+  }
+
+  calculateRoute(coordinateBean: {coordinate: DistanceModel, isRoundTrip: boolean}) {
+    this.coordinate = coordinateBean
     this.drawer.close()
   }
 

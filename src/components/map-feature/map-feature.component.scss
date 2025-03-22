@@ -1,5 +1,38 @@
-
 .map-container {
     height: 100%;
     width: 100%;
+}
+
+button {
+    position: absolute;
+    display: block;
+    top: auto;
+    bottom: 4vh;
+    z-index: 50;
+    left: 10vw;
+    right: auto;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    background-color: transparent;
+    transition: transform 0.5s ease;
+}
+
+.go {
+    background-image: url('/car.gif');
+    background-size: 90%;
+    transform: scaleX(-1);
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.return {
+    background-image: url('/car.gif');
+    background-size: 90%;
+    background-repeat: no-repeat;
+    background-position: center;
+    transform: scaleX(1);
 }

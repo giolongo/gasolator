@@ -1,4 +1,5 @@
 export interface CoordinateModel {
     lat: number,
-    lon: number
+    lon: number,
+    name: string
 }

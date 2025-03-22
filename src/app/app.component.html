@@ -9,7 +9,7 @@
         <app-header-feature (openSidebar)="updateSidebarSignal(true)"></app-header-feature>
       </div>
       <div id="content">
-        <app-map-feature (distanceInKm)="distanceKm = $event" [from]="coordinate?.from" [to]="coordinate?.to"></app-map-feature>
+        <app-map-feature [coordinate]="coordinate" (distanceInKm)="distanceKm = $event" ></app-map-feature>
       </div>
       <div id="footer">
         <app-footer-feature></app-footer-feature>
