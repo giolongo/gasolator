@@ -1,0 +1,117 @@
+{
+  "configVersion": 1,
+  "timestamp": 1755723043538,
+  "index": "/index.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "urls": [
+        "/chunk-573YZOKB.js",
+        "/chunk-A2DXXGN5.js",
+        "/chunk-DGV7ZNFS.js",
+        "/chunk-E76JQF6U.js",
+        "/chunk-EQDQRRRY.js",
+        "/chunk-F7AY4M7F.js",
+        "/chunk-IQNHXKT5.js",
+        "/chunk-NEHUFPFK.js",
+        "/chunk-NYU5LPPT.js",
+        "/chunk-PHKEE3QC.js",
+        "/chunk-X7ZIJ6LW.js",
+        "/chunk-YKLBZ6H2.js",
+        "/chunk-YR5SMXTB.js",
+        "/favicon.ico",
+        "/index.html",
+        "/main-VV7ZR3BR.js",
+        "/manifest.webmanifest",
+        "/polyfills-FFHMD2TL.js",
+        "/styles-LLN34VOT.css"
+      ],
+      "patterns": []
+    },
+    {
+      "name": "assets",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "urls": [
+        "/car.gif",
+        "/gasolator.png",
+        "/gasolator_contact.png",
+        "/gasolator_logo.png",
+        "/gle.png",
+        "/gone.svg",
+        "/icons/icon-128x128.png",
+        "/icons/icon-144x144.png",
+        "/icons/icon-152x152.png",
+        "/icons/icon-192x192.png",
+        "/icons/icon-384x384.png",
+        "/icons/icon-512x512.png",
+        "/icons/icon-72x72.png",
+        "/icons/icon-96x96.png"
+      ],
+      "patterns": []
+    }
+  ],
+  "dataGroups": [],
+  "hashTable": {
+    "/car.gif": "053b8471b5f4924870db8c2eba7689bfec670dd5",
+    "/chunk-573YZOKB.js": "9639300176fcb4f86f10eece6143fa2892b19609",
+    "/chunk-A2DXXGN5.js": "f159ccac4ec5cfc5165de00df8b9a1961df5a647",
+    "/chunk-DGV7ZNFS.js": "4f578e1600fc295d1fdd7bb5d9d839c57d07bdc7",
+    "/chunk-E76JQF6U.js": "79e9efe41c63130351f04b2ab355fe2b0ceefac9",
+    "/chunk-EQDQRRRY.js": "c40057a332d0341d595cc1d005fc2ab4f2573957",
+    "/chunk-F7AY4M7F.js": "c29acab57f308536aeab13a312c40c7c6ce45f91",
+    "/chunk-IQNHXKT5.js": "249707799ea4a3296ca5c0c533871bd5d1a797af",
+    "/chunk-NEHUFPFK.js": "ecd335e29abb675e6659555529d9c05fe2da3bcf",
+    "/chunk-NYU5LPPT.js": "293919b1cbf74a5f7741f875b17aef3f3a5c9c10",
+    "/chunk-PHKEE3QC.js": "92373579fbaf66d367e3cdc9429bff6e72f6975f",
+    "/chunk-X7ZIJ6LW.js": "607664277145f85ff9463b0655311fac6d9a1bd0",
+    "/chunk-YKLBZ6H2.js": "0648d0f4de002b787039bb2e1dd202419346c770",
+    "/chunk-YR5SMXTB.js": "575b455a838bca9f04f55501e0c53cecfb936c7e",
+    "/favicon.ico": "0d6a8ab4d986f52e00d71ffe68978176c5406239",
+    "/gasolator.png": "d9e2331f2bb75c0a845d85bf206bfc9ac05fc8ac",
+    "/gasolator_contact.png": "4ef7629328da0e39b47ce92ac47da81abcb129f2",
+    "/gasolator_logo.png": "36760faca6b73c52dba970762be1752d7a409c96",
+    "/gle.png": "299521682728a13e09962a88256dd9005271016c",
+    "/gone.svg": "731f97ea2e0dc6d4759c54a54c9faf81ef537fda",
+    "/icons/icon-128x128.png": "f912963bdc6d5a38d8f1dd0afbaab2ce8d657acb",
+    "/icons/icon-144x144.png": "b155fd5f2fd5d2ea7760721063003c4cd95fd783",
+    "/icons/icon-152x152.png": "eae6e0f0c8afb8aaae339e2a569b43e9238e5e6c",
+    "/icons/icon-192x192.png": "15c4180454633880d98674aa7394656196c91584",
+    "/icons/icon-384x384.png": "94a915751ef6c9282df9aea405ad679230631814",
+    "/icons/icon-512x512.png": "1de182f76f7329dfa8f9fcdd1fdcdd695bea6a99",
+    "/icons/icon-72x72.png": "aa88a6096bd973be7f6d7a5489bfa6bc2463f8c4",
+    "/icons/icon-96x96.png": "7fb8f59c30ce2ff12c700321a0b39e14b3dc8f95",
+    "/index.html": "441a060e8475258ba6350fbd3c0f07cdcf4e63b4",
+    "/main-VV7ZR3BR.js": "cd7d6c89f808da70de065e65398097ca79181068",
+    "/manifest.webmanifest": "69972d38977a71a85802c1904567ad824a14d577",
+    "/polyfills-FFHMD2TL.js": "f49b49a155bc7d192db62a4c15d0a612b460a667",
+    "/styles-LLN34VOT.css": "1fb333ecf0a98a38c26b3210bc7507963a142608"
+  },
+  "navigationUrls": [
+    {
+      "positive": true,
+      "regex": "^\\/.*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*\\.[^/]*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*__[^/]*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*__[^/]*\\/.*$"
+    }
+  ],
+  "navigationRequestStrategy": "performance"
+}
