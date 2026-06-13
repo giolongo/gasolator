@@ -2,7 +2,7 @@ import { AfterViewInit, Component, effect, inject, input, OnInit, output } from 
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { debounceTime, filter, switchMap, tap } from 'rxjs';
 import { CoordinateModel } from '../../models/coordinate.model';
-import { DistanceModel } from '../../models/distance.model';
+import { DistanceModel, RouteMetrics, RouteSummary } from '../../models';
 import { NominationSuggestModel } from '../../models/nomination-suggest.model';
 import { RestService } from '../../services/rest.service';
 import { autocompleteValidator } from '../../validators/autocomplete.validator';
@@ -17,10 +17,11 @@ import { SiderbarUiComponent } from "../siderbar-ui/siderbar-ui.component";
 export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
   private fb = inject(FormBuilder);
   private restService = inject(RestService);
+  private readonly estimatedTollCostPerKm = 0.08;
 
   protected exceuteCalculate = output<{coordinate: DistanceModel, isRoundTrip: boolean}>();
-  protected travelMessage = output<string>();
-  public distanceKm = input<number>();
+  protected routeSummaryChange = output<RouteSummary>();
+  public routeMetrics = input<RouteMetrics>({ distanceKm: 0, durationMinutes: 0, routeWarnings: [] });
 
   public mapFormControlNameNominationSuggest: {[key: string | number]: NominationSuggestModel[]} = {};
 
@@ -37,6 +38,7 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
   public selectKmTypeName = 'selectKmType';
   public costForDayControlName = 'costForDay';
   public fuelCostControlName = 'costFuel';
+  public tollCostControlName = 'tollCost';
   public roundTripControlName = 'roundTrip';
   public gasolatorForm?: FormGroup;
   public costKmFormControlName = this.costKmLFormControlName;
@@ -45,36 +47,9 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
 
   constructor() {
     effect(() => {
-      const distanceKmVal = this.distanceKm();
-      if (distanceKmVal && distanceKmVal > 0) {
-        let travelCost = 0;
-        let consumption;
-        const kmType = this.gasolatorForm?.get(this.selectKmTypeName)?.value;
-        const costLKm = +this.gasolatorForm?.get(this.costLKmFormControlName)?.value;
-        const costKmL = +this.gasolatorForm?.get(this.costKmLFormControlName)?.value;
-        const fuelCost = +(this.gasolatorForm?.get(this.fuelCostControlName)?.value);
-        const costForDay = +(this.gasolatorForm?.get(this.costForDayControlName)?.value);
-
-        if (kmType === 'lKm') {
-          consumption = costLKm + 'l/100km';
-          travelCost =
-            +(distanceKmVal / 100).toFixed(2) *
-            costLKm *
-            fuelCost +
-            costForDay;
-        } else {
-          consumption = costKmL + 'km/l';
-          travelCost =
-            +((distanceKmVal) / (costKmL)).toFixed(2) *
-            fuelCost +
-            costForDay;
-        }
-        if (Number.isNaN(travelCost)) {
-          travelCost = 0;
-        }
-
-        this.travelMessage.emit(`The trip of ${distanceKmVal.toFixed(2)} km will cost €${(+travelCost).toFixed(2)}, considering the fuel cost (€${fuelCost}), vehicle wear (€${costForDay}), and average fuel consumption (${consumption}). The price does not include extra transport costs.`)
-
+      const metrics = this.routeMetrics();
+      if (metrics.distanceKm > 0) {
+        this.routeSummaryChange.emit(this.calculateRouteSummary(metrics));
       }
     })
   }
@@ -89,6 +64,7 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
       [this.costForDayControlName]: ['0', Validators.required],
       [this.selectKmTypeName]: ['kmL', Validators.required],
       [this.fuelCostControlName]: ['0', Validators.required],
+      [this.tollCostControlName]: ['0', Validators.required],
       [this.costKmLFormControlName]: ['0', Validators.required],
       [this.roundTripControlName]: [true, Validators.required],
       [this.costLKmFormControlName]: ['0'],
@@ -127,6 +103,49 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
       })
     })
     this.exceuteCalculate.emit({ coordinate: {from: this.fromLatLng, to: this.toLatLng, intermediateStops}, isRoundTrip: this.gasolatorForm?.get(this.roundTripControlName)?.value })
+  }
+
+  private calculateRouteSummary(metrics: RouteMetrics): RouteSummary {
+    let fuelOnlyCost = 0;
+    let consumption = '0 km/l';
+    const kmType = this.gasolatorForm?.get(this.selectKmTypeName)?.value;
+    const costLKm = +this.gasolatorForm?.get(this.costLKmFormControlName)?.value;
+    const costKmL = +this.gasolatorForm?.get(this.costKmLFormControlName)?.value;
+    const fuelPrice = +this.gasolatorForm?.get(this.fuelCostControlName)?.value;
+    const vehicleWearCost = +this.gasolatorForm?.get(this.costForDayControlName)?.value || 0;
+    const manualTollCost = +this.gasolatorForm?.get(this.tollCostControlName)?.value || 0;
+    const tollCost = manualTollCost > 0
+      ? manualTollCost
+      : this.estimateTollCost(metrics.distanceKm);
+    const tollCostSource = manualTollCost > 0 ? 'manual' : 'estimated';
+
+    if (kmType === 'lKm') {
+      consumption = `${costLKm} l/100km`;
+      fuelOnlyCost = (metrics.distanceKm / 100) * costLKm * fuelPrice;
+    } else {
+      consumption = `${costKmL} km/l`;
+      fuelOnlyCost = costKmL > 0 ? (metrics.distanceKm / costKmL) * fuelPrice : 0;
+    }
+
+    if (Number.isNaN(fuelOnlyCost)) {
+      fuelOnlyCost = 0;
+    }
+
+    const totalCost = fuelOnlyCost + vehicleWearCost + tollCost;
+
+    return {
+      ...metrics,
+      fuelCost: fuelOnlyCost,
+      vehicleWearCost,
+      tollCost,
+      tollCostSource,
+      totalCost,
+      consumption
+    };
+  }
+
+  private estimateTollCost(distanceKm: number): number {
+    return +(distanceKm * this.estimatedTollCostPerKm).toFixed(2);
   }
 
   get intermediateStops(): FormArray {

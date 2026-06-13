@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, effect, inject, input, OnInit, output } from '@angular/core';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { Feature, Overlay } from 'ol';
+import { Coordinate } from 'ol/coordinate';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import { createEmpty, extend, Extent } from 'ol/extent';
@@ -13,39 +13,41 @@ import { Vector as VectorSource } from 'ol/source';
 import OSM from 'ol/source/OSM';
 import { Icon, Stroke, Style } from 'ol/style';
 import { BehaviorSubject, combineLatest, Observable, tap } from 'rxjs';
-import { DistanceModel, OsrmRoute } from '../../models';
+import { DistanceModel, OsrmRoute, RouteMetrics } from '../../models';
 import { RestService } from '../../services/rest.service';
 
 @Component({
   selector: 'app-map-feature',
-  imports: [CommonModule, MatTooltipModule],
+  imports: [CommonModule],
   templateUrl: './map-feature.component.html',
   styleUrls: ['./map-feature.component.scss']
 })
 export class MapFeatureComponent implements OnInit {
 
   public isGone$ = new BehaviorSubject<boolean>(true);
-  public tooltipButtonMessage: 'Gone' | 'Return' = 'Gone';
 
   private restService = inject(RestService);
 
   private combinedExtent: Extent = createEmpty();
 
   private dynamicLayers: VectorLayer<VectorSource>[] = [];
+  private routeAnimationIds = new Set<number>();
 
   coordinate = input<{ coordinate: DistanceModel, isRoundTrip: boolean }>();
 
 
-  distanceInKm = output<number>();
+  routeMetrics = output<RouteMetrics>();
   distanceInKmVal = 0;
+  durationMinutesVal = 0;
   // @Output() showToast = new EventEmitter<number>();
 
   map?: Map;
 
   constructor() {
     effect(() => {
-      this.distanceInKm.emit(0)
+      this.routeMetrics.emit({ distanceKm: 0, durationMinutes: 0, routeWarnings: [] })
       this.distanceInKmVal = 0;
+      this.durationMinutesVal = 0;
       const promises = [];
       if (this.coordinate()?.coordinate.from && this.coordinate()?.coordinate.to) {
         this.removeDynamicLayers(); // 🔹 Rimuove i vecchi marker e route
@@ -59,7 +61,7 @@ export class MapFeatureComponent implements OnInit {
           promises.push(this.initializeMap(coordinate?.from, coordinate?.intermediateStops[0], true));
           promises.push(this.initializeMap(coordinate?.intermediateStops[coordinate?.intermediateStops.length - 1], coordinate?.to, true));
 
-          for (let i = 0; i < (coordinate?.intermediateStops?.length ?? 0); i++) {
+          for (let i = 0; i < (coordinate?.intermediateStops?.length ?? 0) - 1; i++) {
             promises.push(this.initializeMap(coordinate?.intermediateStops[i], coordinate?.intermediateStops[i + 1], true));
           }
         }
@@ -74,8 +76,9 @@ export class MapFeatureComponent implements OnInit {
             promises.push(this.initializeMap(coordinate?.to, coordinate?.intermediateStops[coordinate?.intermediateStops.length - 1], false));
             promises.push(this.initializeMap(coordinate?.intermediateStops[0], coordinate?.from, false));
 
-            for (let i = 0; i < (coordinate?.intermediateStops?.length ?? 0); i++) {
-              promises.push(this.initializeMap(coordinate?.intermediateStops.reverse()[i], coordinate?.intermediateStops.reverse()[i + 1], false));
+            const reverseStops = [...(coordinate?.intermediateStops ?? [])].reverse();
+            for (let i = 0; i < reverseStops.length - 1; i++) {
+              promises.push(this.initializeMap(reverseStops[i], reverseStops[i + 1], false));
             }
           }
         }
@@ -85,7 +88,14 @@ export class MapFeatureComponent implements OnInit {
               this.map.getView().fit(this.combinedExtent, { padding: [50, 50, 50, 50] });
             }
             this.showGoneOrReturn();
-            this.distanceInKm.emit(this.distanceInKmVal);
+            this.routeMetrics.emit({
+              distanceKm: this.distanceInKmVal,
+              durationMinutes: this.durationMinutesVal,
+              routeWarnings: [
+                'Durata stimata da OSRM, senza traffico in tempo reale.',
+                'Chiusure e lavori sono considerati solo se presenti nei dati stradali OSRM/OpenStreetMap.'
+              ]
+            });
             this.combinedExtent = createEmpty()
           }
         })
@@ -108,14 +118,13 @@ export class MapFeatureComponent implements OnInit {
         zoom: 12
       })
     });
-    this.initializeMap()?.subscribe;
-    this.isGone$.subscribe((val) => {
-      this.tooltipButtonMessage = val ? 'Gone' : 'Return';
+    this.centerOnUserLocation();
+    this.isGone$.subscribe(() => {
       this.showGoneOrReturn();
     })
   }
 
-  initializeMap(from?: { lat: number | string, lon: number | string, name: string }, to?: { lat: number | string, lon: number | string, name: string }, isGone?: boolean): Observable<OsrmRoute> | void {
+  private centerOnUserLocation(): void {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
         const userLon = position.coords.longitude;
@@ -125,18 +134,21 @@ export class MapFeatureComponent implements OnInit {
         console.error("Errore geolocalizzazione:", error);
       });
     } else {
-      alert("Geolocalizzazione non supportata.");
+      console.warn("Geolocalizzazione non supportata.");
     }
+  }
 
+  initializeMap(from?: { lat: number | string, lon: number | string, name: string }, to?: { lat: number | string, lon: number | string, name: string }, isGone?: boolean): Observable<OsrmRoute> | void {
     if (from && to) {
       this.addMarkers(+from.lon, +from.lat, +to.lon, +to.lat);
-      debugger
       return this.drawRoute(+from.lon, +from.lat, [+to.lon, +to.lat], from.name, to.name, isGone != null ? isGone : true);
     }
   }
 
   removeDynamicLayers(): void {
     if (this.map) {
+      this.routeAnimationIds.forEach(animationId => cancelAnimationFrame(animationId));
+      this.routeAnimationIds.clear();
       this.dynamicLayers.forEach(layer => this.map?.removeLayer(layer));
       this.dynamicLayers = []; // Svuota l'array
     }
@@ -178,7 +190,6 @@ export class MapFeatureComponent implements OnInit {
   }
 
   showGoneOrReturn() {
-    debugger
     this.map?.getLayers().forEach(l => {
       const isGoneProperties = l.getProperties()['isGone']
       if (isGoneProperties != null) {
@@ -213,8 +224,6 @@ export class MapFeatureComponent implements OnInit {
             features: [routeFeature]
           });
 
-          debugger
-
           const routeLayer = new VectorLayer({
             source: routeSource,
             properties: { isGone }
@@ -222,12 +231,16 @@ export class MapFeatureComponent implements OnInit {
 
           this.dynamicLayers.push(routeLayer);
           this.map?.addLayer(routeLayer);
+          this.addAnimatedCar(routeLine, isGone);
 
           const extent = routeLine.getExtent();
           this.combinedExtent = extend(this.combinedExtent, extent);
           // this.map?.getView().fit(extent, { padding: [50, 50, 50, 50] });
           const distance = data.routes[0].distance;
           this.distanceInKmVal += (+(distance / 1000).toFixed(2));
+          const duration = data.routes[0].duration;
+          const durationMinutes = Math.round(duration / 60);
+          this.durationMinutesVal += durationMinutes;
 
           // 🔹 **Aggiungi overlay tooltip**
           const tooltipElement = document.createElement('div');
@@ -248,7 +261,7 @@ export class MapFeatureComponent implements OnInit {
             const feature = this.map?.forEachFeatureAtPixel(evt.pixel, (f) => f);
             if (feature === routeFeature) {
               const coordinate = evt.coordinate;
-              tooltipElement.innerHTML = `<div style="text-align: left; font-size:.75rem"><div>From ${from}</div> <div>To ${to}</div> <div>Distance: ${(distance / 1000).toFixed(2)} km</div></div>`;
+              tooltipElement.innerHTML = `<div style="text-align: left; font-size:.75rem"><div>From ${from}</div> <div>To ${to}</div> <div>Distance: ${(distance / 1000).toFixed(2)} km</div><div>Time: ${this.formatDuration(durationMinutes)}</div></div>`;
               tooltipOverlay.setPosition(coordinate);
               tooltipElement.style.display = 'block';
             } else {
@@ -260,6 +273,127 @@ export class MapFeatureComponent implements OnInit {
           console.warn('Nessun percorso trovato.');
         }
       }));
+  }
+
+  private addAnimatedCar(routeLine: LineString, isGone: boolean): void {
+    const routeCoordinates = routeLine.getCoordinates();
+    const routeMeasure = this.getRouteMeasure(routeCoordinates);
+
+    if (routeCoordinates.length < 2 || routeMeasure.totalLength === 0) {
+      return;
+    }
+
+    const carFeature = new Feature({
+      geometry: new Point(routeCoordinates[0])
+    });
+
+    const carIcon = new Icon({
+      src: 'car.gif',
+      scale: 0.18,
+      rotation: this.getBearing(routeCoordinates[0], routeCoordinates[1]),
+      rotateWithView: true
+    });
+
+    carFeature.setStyle(new Style({ image: carIcon }));
+
+    const carSource = new VectorSource({
+      features: [carFeature]
+    });
+
+    const carLayer = new VectorLayer({
+      source: carSource,
+      properties: { isGone }
+    });
+
+    carLayer.setZIndex(75);
+    this.dynamicLayers.push(carLayer);
+    this.map?.addLayer(carLayer);
+
+    const animationDuration = Math.min(32000, Math.max(10000, routeMeasure.totalLength / 28));
+    const startTime = performance.now();
+    let animationId = 0;
+
+    const animate = (time: number) => {
+      this.routeAnimationIds.delete(animationId);
+      const progress = ((time - startTime) % animationDuration) / animationDuration;
+      const current = this.getCoordinateAtDistance(routeCoordinates, routeMeasure.cumulativeLengths, routeMeasure.totalLength * progress);
+      const next = this.getCoordinateAtDistance(
+        routeCoordinates,
+        routeMeasure.cumulativeLengths,
+        routeMeasure.totalLength * ((progress + 0.003) % 1)
+      );
+      const geometry = carFeature.getGeometry();
+
+      if (geometry instanceof Point) {
+        geometry.setCoordinates(current);
+      }
+
+      carIcon.setRotation(this.getBearing(current, next));
+      carFeature.changed();
+
+      animationId = requestAnimationFrame(animate);
+      this.routeAnimationIds.add(animationId);
+    };
+
+    animationId = requestAnimationFrame(animate);
+    this.routeAnimationIds.add(animationId);
+  }
+
+  private getRouteMeasure(coordinates: Coordinate[]): { cumulativeLengths: number[], totalLength: number } {
+    const cumulativeLengths = [0];
+
+    for (let i = 1; i < coordinates.length; i++) {
+      cumulativeLengths.push(
+        cumulativeLengths[i - 1] + this.getSegmentLength(coordinates[i - 1], coordinates[i])
+      );
+    }
+
+    return {
+      cumulativeLengths,
+      totalLength: cumulativeLengths[cumulativeLengths.length - 1]
+    };
+  }
+
+  private getCoordinateAtDistance(coordinates: Coordinate[], cumulativeLengths: number[], distance: number): Coordinate {
+    const totalLength = cumulativeLengths[cumulativeLengths.length - 1];
+    const targetDistance = Math.max(0, Math.min(distance, totalLength));
+    let endIndex = cumulativeLengths.findIndex(length => length >= targetDistance);
+
+    if (endIndex <= 0) {
+      endIndex = 1;
+    }
+
+    const startIndex = endIndex - 1;
+    const segmentLength = cumulativeLengths[endIndex] - cumulativeLengths[startIndex];
+    const segmentProgress = segmentLength === 0
+      ? 0
+      : (targetDistance - cumulativeLengths[startIndex]) / segmentLength;
+    const start = coordinates[startIndex];
+    const end = coordinates[endIndex];
+
+    return [
+      start[0] + (end[0] - start[0]) * segmentProgress,
+      start[1] + (end[1] - start[1]) * segmentProgress
+    ];
+  }
+
+  private getSegmentLength(from: Coordinate, to: Coordinate): number {
+    return Math.hypot(to[0] - from[0], to[1] - from[1]);
+  }
+
+  private getBearing(from: Coordinate, to: Coordinate): number {
+    return Math.atan2(to[1] - from[1], to[0] - from[0]);
+  }
+
+  formatDuration(minutes: number): string {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+
+    if (hours === 0) {
+      return `${remainingMinutes} min`;
+    }
+
+    return `${hours} h ${remainingMinutes.toString().padStart(2, '0')} min`;
   }
 
   // 🔹 **Funzione per decodificare la geometria Polyline**

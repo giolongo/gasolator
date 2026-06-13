@@ -1,7 +1,7 @@
 <app-car-loader *ngIf="isLoading$ | async"></app-car-loader>
 <mat-drawer-container autosize>
   <mat-drawer #drawer mode="over">
-    <app-siderbar-feature [distanceKm]="distanceKm" (exceuteCalculate)="calculateRoute($event)" (travelMessage)="openMessage($event)"></app-siderbar-feature>
+    <app-siderbar-feature [routeMetrics]="routeMetrics" (exceuteCalculate)="calculateRoute($event)" (routeSummaryChange)="updateRouteSummary($event)"></app-siderbar-feature>
   </mat-drawer>
   <mat-drawer-content>
     <div id="container">
@@ -9,7 +9,47 @@
         <app-header-feature (openSidebar)="updateSidebarSignal(true)"></app-header-feature>
       </div>
       <div id="content">
-        <app-map-feature [coordinate]="coordinate" (distanceInKm)="distanceKm = $event" ></app-map-feature>
+        <section *ngIf="routeSummary as summary" class="route-summary" [class.is-collapsed]="isSummaryCollapsed" aria-live="polite">
+          <div class="summary-heading">
+            <div>
+              <span>Riepilogo viaggio</span>
+              <strong>€{{ summary.totalCost.toFixed(2) }}</strong>
+            </div>
+            <button type="button" class="summary-toggle" (click)="toggleSummary()" [attr.aria-expanded]="!isSummaryCollapsed">
+              {{ isSummaryCollapsed ? '+' : '-' }}
+            </button>
+          </div>
+          <div class="summary-body" *ngIf="!isSummaryCollapsed">
+            <div class="summary-grid">
+              <div>
+                <span>Distanza</span>
+                <strong>{{ summary.distanceKm.toFixed(2) }} km</strong>
+              </div>
+              <div>
+                <span>Tempo</span>
+                <strong>{{ formatDuration(summary.durationMinutes) }}</strong>
+              </div>
+              <div>
+                <span>Carburante</span>
+                <strong>€{{ summary.fuelCost.toFixed(2) }}</strong>
+              </div>
+              <div>
+                <span>Caselli</span>
+                <strong>€{{ summary.tollCost.toFixed(2) }}</strong>
+              </div>
+            </div>
+            <div class="summary-note">
+              Consumo {{ summary.consumption }} · Usura €{{ summary.vehicleWearCost.toFixed(2) }}
+            </div>
+            <div class="summary-note">
+              Caselli {{ summary.tollCostSource === 'estimated' ? 'stimati' : 'manuali' }} a €{{ summary.tollCost.toFixed(2) }}
+            </div>
+            <ul class="summary-warnings" *ngIf="summary.routeWarnings.length">
+              <li *ngFor="let warning of summary.routeWarnings">{{ warning }}</li>
+            </ul>
+          </div>
+        </section>
+        <app-map-feature [coordinate]="coordinate" (routeMetrics)="updateRouteMetrics($event)" ></app-map-feature>
       </div>
       <div id="footer">
         <app-footer-feature></app-footer-feature>

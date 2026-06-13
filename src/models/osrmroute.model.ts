@@ -1,3 +1,3 @@
 export interface OsrmRoute {
-    routes?: { geometry: string, distance: number }[]
+    routes?: { geometry: string, distance: number, duration: number }[]
 }

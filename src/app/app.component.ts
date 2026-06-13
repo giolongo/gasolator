@@ -7,8 +7,7 @@ import { MapFeatureComponent } from "../components/map-feature/map-feature.compo
 import { CarLoaderComponent } from "../components/car-loader/car-loader.component";
 import { RestService } from '../services/rest.service';
 import { CommonModule } from '@angular/common';
-import {MatSnackBar} from '@angular/material/snack-bar';
-import { DistanceModel } from '../models/distance.model';
+import { DistanceModel, RouteMetrics, RouteSummary } from '../models';
 
 @Component({
   selector: 'app-root',
@@ -19,10 +18,11 @@ import { DistanceModel } from '../models/distance.model';
 export class AppComponent implements OnInit {
   title = 'gasolator';
   coordinate?: {coordinate: DistanceModel, isRoundTrip: boolean};
-  distanceKm: number = 0;  
+  routeMetrics: RouteMetrics = { distanceKm: 0, durationMinutes: 0, routeWarnings: [] };
+  routeSummary?: RouteSummary;
+  isSummaryCollapsed = false;
 
   private restService = inject(RestService);
-  private snackBar = inject(MatSnackBar);
 
   public isLoading$ = this.restService.inLoading;
 
@@ -57,14 +57,35 @@ export class AppComponent implements OnInit {
 
   calculateRoute(coordinateBean: {coordinate: DistanceModel, isRoundTrip: boolean}) {
     this.coordinate = coordinateBean
+    this.routeSummary = undefined;
     this.drawer.close()
   }
 
-  openMessage(message: string){
-    this.snackBar.open(message, 'OK', {
-      horizontalPosition: 'end',
-      verticalPosition: 'bottom'
-    });
+  updateRouteMetrics(routeMetrics: RouteMetrics): void {
+    this.routeMetrics = routeMetrics;
+    if (routeMetrics.distanceKm === 0) {
+      this.routeSummary = undefined;
+      this.isSummaryCollapsed = false;
+    }
+  }
+
+  updateRouteSummary(routeSummary: RouteSummary): void {
+    this.routeSummary = routeSummary;
+  }
+
+  toggleSummary(): void {
+    this.isSummaryCollapsed = !this.isSummaryCollapsed;
+  }
+
+  formatDuration(minutes: number): string {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+
+    if (hours === 0) {
+      return `${remainingMinutes} min`;
+    }
+
+    return `${hours} h ${remainingMinutes.toString().padStart(2, '0')} min`;
   }
 
 }

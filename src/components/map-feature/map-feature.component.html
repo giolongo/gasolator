@@ -1,4 +1,9 @@
-<button *ngIf="coordinate()?.isRoundTrip" mat-raised-button [matTooltip]="tooltipButtonMessage"
-  (click)="isGone$.next(!isGone$.value)" [ngClass]="isGone$.value ? 'go' : 'return'">
-</button>
+<div *ngIf="coordinate()?.isRoundTrip" class="route-direction-control" role="group" aria-label="Direzione percorso">
+  <button type="button" [class.active]="isGone$.value" (click)="isGone$.next(true)">
+    Andata
+  </button>
+  <button type="button" [class.active]="!isGone$.value" (click)="isGone$.next(false)">
+    Ritorno
+  </button>
+</div>
 <div id="map" class="map-container"></div>
