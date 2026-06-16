@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1781630805797,
+  "timestamp": 1781639284956,
   "index": "/index.html",
   "assetGroups": [
     {
@@ -68,7 +68,7 @@
         "https:\\/\\/nominatim\\.openstreetmap\\.org\\/.*",
         "https:\\/\\/router\\.project-osrm\\.org\\/.*"
       ],
-      "strategy": "network-first",
+      "strategy": "freshness",
       "maxSize": 100,
       "maxAge": 86400000,
       "cacheQueryOptions": {
