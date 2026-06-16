@@ -1,0 +1,11 @@
+.flag-toggle {
+  display: inline-block;
+  font-size: 18px;
+  transition: font-size 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  opacity: 0.5;
+
+  &.active {
+    font-size: 24px;
+    opacity: 1;
+  }
+}

@@ -1,56 +1,61 @@
 <div class="sidebar-container">
     <img class="logo-img" src="gasolator.png">
     <form *ngIf="formSignal() as form" [formGroup]="form" (ngSubmit)="onSubmit()">
-        <mat-label>Round Trip</mat-label>
-        <mat-slide-toggle *ngIf="roundTripControlName() as name" [formControlName]="name"></mat-slide-toggle>
+        <div class="trip-toggle">
+            <mat-label>{{ 'SIDEBAR.ROUND_TRIP' | translate }}</mat-label>
+            <mat-slide-toggle *ngIf="roundTripControlName() as name" [formControlName]="name"></mat-slide-toggle>
+        </div>
 
-        <app-input-ui *ngIf="fromFormControlName() as name" [label]="name | titlecase" type="text" [controlName]="name"
-            [formSignal]="itineraryForm()" [isAutocomplete]="true" [suggest]="mapFormControlNameNominationSuggest()?.[name] ?? []"></app-input-ui>
+        <div style="display:flex; align-items:center; gap:8px; width:100%;">
+            <app-input-ui *ngIf="fromFormControlName() as name" style="flex:1; min-width:0;" [label]="'MAP.FROM' | translate" type="text" [controlName]="name"
+                [formSignal]="itineraryForm()" [isAutocomplete]="true" [suggest]="mapFormControlNameNominationSuggest()?.[name] ?? []"
+                [suffixIcon]="'my_location'" [suffixAriaLabel]="'MAP.RECALCULATE_LOCATION' | translate" (suffixClick)="recalcFrom.emit()"></app-input-ui>
+        </div>
         <div *ngIf="intermediateStopsForm()?.controls as controls">
-            <form *ngIf="itineraryForm() as iForm" [formGroup]="iForm">
+            <div *ngIf="itineraryForm() as iForm" [formGroup]="iForm">
                 <div *ngIf="intermediateStopsFormName() as nameArray">
                     <div [formArrayName]="nameArray" *ngFor="let stop of controls; let i = index">
                         <app-input-ui (deleteElement)="deleteElement.emit(i)" [label]="'Stop '+(i+1) | titlecase" type="text" [controlName]="i" [isAutocomplete]="true" [formSignal]="itineraryForm()" 
-                            [suggest]="mapFormControlNameNominationSuggest()?.[i] ?? []" [formArrayNameSignal]="nameArray"></app-input-ui>
+                            [suggest]="mapFormControlNameNominationSuggest()?.[i] ?? []" [formArrayNameSignal]="nameArray" [showDeleteIcon]="true"></app-input-ui>
                     </div>
                 </div>
-            </form>
+            </div>
         </div>
-        <app-input-ui *ngIf="toFormControlName() as name" [label]="name | titlecase" type="text" [controlName]="name"
+        <app-input-ui *ngIf="toFormControlName() as name" [label]="'MAP.TO' | translate" type="text" [controlName]="name"
             [formSignal]="itineraryForm()" [isAutocomplete]="true" [suggest]="mapFormControlNameNominationSuggest()?.[name] ?? []"></app-input-ui>
-        <button type="button" style="margin-bottom: 1rem;" (click)="addStop.emit()" mat-stroked-button>Add intermediate
-            Stop</button>
+        <button type="button" class="add-stop" (click)="addStop.emit()" mat-stroked-button>{{ 'SIDEBAR.ADD_STOP' | translate }}</button>
 
             
-        <app-input-ui *ngIf="costForDayControlName() as name" label="Cost for travel (wear of the vehicle)"
+        <app-input-ui *ngIf="costForDayControlName() as name" [label]="'SIDEBAR.COST_FOR_DAY' | translate"
             type="number" [controlName]="name" [formSignal]="form"></app-input-ui>
-        <app-input-ui *ngIf="fuelCostControlName() as name" label="Fuel cost (€/l)" type="number" [controlName]="name"
+        <app-input-ui *ngIf="fuelCostControlName() as name" [label]="'SIDEBAR.FUEL_COST' | translate" type="number" [controlName]="name"
             [formSignal]="form"></app-input-ui>
+        <!-- toll input removed -->
         <mat-card appearance="outlined">
-            <div style="margin: 1rem; display: flex; flex-direction: column;">
+            <div class="consumption-card">
                 <mat-button-toggle-group *ngIf="selectKmTypeName() as name" [formControlName]="name" [name]="name"
-                    style="margin: auto; margin-bottom: 1vh;">
-                    <mat-button-toggle value="kmL">Km/l</mat-button-toggle>
-                    <mat-button-toggle value="lKm">l/100Km</mat-button-toggle>
+                    class="consumption-toggle">
+                    <mat-button-toggle value="kmL">{{ 'SIDEBAR.KM_L' | translate }}</mat-button-toggle>
+                    <mat-button-toggle value="lKm">{{ 'SIDEBAR.L_PER_100KM' | translate }}</mat-button-toggle>
                 </mat-button-toggle-group>
 
                 <div *ngIf="selectKmTypeName() as kmTypeName">
                     <div *ngIf="costKmLFormControlName() === form.get(kmTypeName)?.value">
                         <app-input-ui *ngIf="costKmLFormControlName() as name" type="number" [controlName]="name"
-                            label="Km/l" [formSignal]="form"></app-input-ui>
+                            [label]="'SIDEBAR.KM_L' | translate" [formSignal]="form"></app-input-ui>
                     </div>
 
                     <div *ngIf="costLKmFormControlName() === form.get(kmTypeName)?.value">
                         <app-input-ui *ngIf="costLKmFormControlName() as name" type="number" [controlName]="name"
-                            label="l/100Km" [formSignal]="form"></app-input-ui>
+                            [label]="'SIDEBAR.L_PER_100KM' | translate" [formSignal]="form"></app-input-ui>
                     </div>
                 </div>
             </div>
         </mat-card>
 
-        <button type="submit" mat-flat-button [disabled]="form.invalid">Calculate</button>
+        <button type="submit" mat-flat-button [disabled]="form.invalid">{{ 'SIDEBAR.CALCULATE' | translate }}</button>
     </form>
-    <a href="mailto:support@gasolator.com" style="display: block; margin: 0 auto; text-align: center;">
-        <img src="gasolator_contact.png" alt="Contact Support" style="max-width: 5rem; height: auto;">
+    <a href="mailto:support@gasolator.com">
+        <img src="gasolator_contact.png" alt="Contact Support">
     </a>
 </div>

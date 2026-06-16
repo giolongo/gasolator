@@ -3,36 +3,44 @@
     width: 100%;
 }
 
-button {
+.route-direction-control {
     position: absolute;
-    display: block;
-    top: auto;
-    bottom: 4vh;
+    display: flex;
+    gap: 0.25rem;
+    bottom: 1rem;
     z-index: 50;
-    left: 10vw;
-    right: auto;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    border: none;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.25rem;
+    border: 1px solid #cfdad3;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.16);
+}
+
+.route-direction-control button {
+    min-width: 5.5rem;
+    min-height: 2.25rem;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #33423a;
     cursor: pointer;
-    font-weight: bold;
-    background-color: transparent;
-    transition: transform 0.5s ease;
+    font-weight: 700;
 }
 
-.go {
-    background-image: url('/car.gif');
-    background-size: 90%;
-    transform: scaleX(-1);
-    background-repeat: no-repeat;
-    background-position: center;
+.route-direction-control button.active {
+    background: #1f6f49;
+    color: #ffffff;
 }
 
-.return {
-    background-image: url('/car.gif');
-    background-size: 90%;
-    background-repeat: no-repeat;
-    background-position: center;
-    transform: scaleX(1);
+.route-direction-control button:not(.active):hover {
+    background: #edf4ef;
+}
+
+@media (max-width: 640px) {
+    .route-direction-control {
+        top: 0.75rem;
+        bottom: auto;
+    }
 }

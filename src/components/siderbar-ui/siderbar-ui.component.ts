@@ -6,7 +6,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import {MatButtonToggleModule} from '@angular/material/button-toggle';
 import {MatCardModule} from '@angular/material/card';
-import {MatButton} from '@angular/material/button';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import { TranslateModule } from '@ngx-translate/core';
 import { InputUiComponent } from "../input-ui/input-ui.component";
 import { GasolatorModel, NominationSuggestModel } from '../../models';
 import {
@@ -20,8 +22,10 @@ const imports = [
   ReactiveFormsModule, 
   MatFormFieldModule, 
   MatInputModule, 
-  MatButton, 
+  MatButtonModule,
+  TranslateModule,
   InputUiComponent,
+  MatIconModule,
   MatCardModule,
   MatSlideToggleModule
 ]
@@ -46,6 +50,7 @@ export class SiderbarUiComponent {
   public costKmLFormControlName = input<string>();
   public costLKmFormControlName = input<string>();
   public costForDayControlName = input<string>();
+  // tollCostControlName removed
   public roundTripControlName = input<string>();
   public fuelCostControlName = input<string>();
   public mapFormControlNameNominationSuggest =input<{[key: string | number]: NominationSuggestModel[]}>();
@@ -55,6 +60,7 @@ export class SiderbarUiComponent {
   protected changeKmCountType = output<'kmL' | 'lKm'>();
   protected addStop = output<void>();
   protected deleteElement = output<number>();
+  protected recalcFrom = output<void>();
 
 
 

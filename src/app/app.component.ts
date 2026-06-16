@@ -1,4 +1,5 @@
 import { Component, effect, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MatDrawer, MatSidenavModule } from '@angular/material/sidenav';
 import { FooterFeatureComponent } from "../components/footer-feature/footer-feature.component";
 import { HeaderFeatureComponent } from "../components/header-feature/header-feature.component";
@@ -7,22 +8,23 @@ import { MapFeatureComponent } from "../components/map-feature/map-feature.compo
 import { CarLoaderComponent } from "../components/car-loader/car-loader.component";
 import { RestService } from '../services/rest.service';
 import { CommonModule } from '@angular/common';
-import {MatSnackBar} from '@angular/material/snack-bar';
-import { DistanceModel } from '../models/distance.model';
+import { DistanceModel, RouteMetrics, RouteSummary } from '../models';
 
 @Component({
   selector: 'app-root',
-  imports: [HeaderFeatureComponent, FooterFeatureComponent, SiderbarFeatureComponent, MatSidenavModule, MapFeatureComponent, CarLoaderComponent, CommonModule],
+  imports: [HeaderFeatureComponent, FooterFeatureComponent, SiderbarFeatureComponent, MatSidenavModule, MapFeatureComponent, CarLoaderComponent, CommonModule, TranslateModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent implements OnInit {
   title = 'gasolator';
   coordinate?: {coordinate: DistanceModel, isRoundTrip: boolean};
-  distanceKm: number = 0;  
+  routeMetrics: RouteMetrics = { distanceKm: 0, durationMinutes: 0, routeWarnings: [] };
+  routeSummary?: RouteSummary;
+  isSummaryCollapsed = false;
 
   private restService = inject(RestService);
-  private snackBar = inject(MatSnackBar);
+  private translate = inject(TranslateService);
 
   public isLoading$ = this.restService.inLoading;
 
@@ -43,6 +45,24 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // default language
+    this.translate.setDefaultLang('en');
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        // simple Italy bounding box
+        if (lon >= 6.5 && lon <= 18.6 && lat >= 36.5 && lat <= 47.1) {
+          this.translate.use('it');
+        } else {
+          this.translate.use('en');
+        }
+      }, () => {
+        this.translate.use('en');
+      });
+    } else {
+      this.translate.use('en');
+    }
     this.drawer.closedStart.subscribe(() => {
       this.updateSidebarSignal(false)
     })
@@ -57,14 +77,35 @@ export class AppComponent implements OnInit {
 
   calculateRoute(coordinateBean: {coordinate: DistanceModel, isRoundTrip: boolean}) {
     this.coordinate = coordinateBean
+    this.routeSummary = undefined;
     this.drawer.close()
   }
 
-  openMessage(message: string){
-    this.snackBar.open(message, 'OK', {
-      horizontalPosition: 'end',
-      verticalPosition: 'bottom'
-    });
+  updateRouteMetrics(routeMetrics: RouteMetrics): void {
+    this.routeMetrics = routeMetrics;
+    if (routeMetrics.distanceKm === 0) {
+      this.routeSummary = undefined;
+      this.isSummaryCollapsed = false;
+    }
+  }
+
+  updateRouteSummary(routeSummary: RouteSummary): void {
+    this.routeSummary = routeSummary;
+  }
+
+  toggleSummary(): void {
+    this.isSummaryCollapsed = !this.isSummaryCollapsed;
+  }
+
+  formatDuration(minutes: number): string {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+
+    if (hours === 0) {
+      return `${remainingMinutes} ${this.translate.instant('MAP.MIN')}`;
+    }
+
+    return `${hours} ${this.translate.instant('MAP.HOUR')} ${remainingMinutes.toString().padStart(2, '0')} ${this.translate.instant('MAP.MIN')}`;
   }
 
 }

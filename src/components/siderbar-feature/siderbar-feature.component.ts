@@ -1,8 +1,9 @@
 import { AfterViewInit, Component, effect, inject, input, OnInit, output } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { debounceTime, filter, switchMap, tap } from 'rxjs';
 import { CoordinateModel } from '../../models/coordinate.model';
-import { DistanceModel } from '../../models/distance.model';
+import { DistanceModel, RouteMetrics, RouteSummary } from '../../models';
 import { NominationSuggestModel } from '../../models/nomination-suggest.model';
 import { RestService } from '../../services/rest.service';
 import { autocompleteValidator } from '../../validators/autocomplete.validator';
@@ -17,10 +18,12 @@ import { SiderbarUiComponent } from "../siderbar-ui/siderbar-ui.component";
 export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
   private fb = inject(FormBuilder);
   private restService = inject(RestService);
+  private translate = inject(TranslateService);
+  // toll estimates removed
 
   protected exceuteCalculate = output<{coordinate: DistanceModel, isRoundTrip: boolean}>();
-  protected travelMessage = output<string>();
-  public distanceKm = input<number>();
+  protected routeSummaryChange = output<RouteSummary>();
+  public routeMetrics = input<RouteMetrics>({ distanceKm: 0, durationMinutes: 0, routeWarnings: [] });
 
   public mapFormControlNameNominationSuggest: {[key: string | number]: NominationSuggestModel[]} = {};
 
@@ -45,36 +48,9 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
 
   constructor() {
     effect(() => {
-      const distanceKmVal = this.distanceKm();
-      if (distanceKmVal && distanceKmVal > 0) {
-        let travelCost = 0;
-        let consumption;
-        const kmType = this.gasolatorForm?.get(this.selectKmTypeName)?.value;
-        const costLKm = +this.gasolatorForm?.get(this.costLKmFormControlName)?.value;
-        const costKmL = +this.gasolatorForm?.get(this.costKmLFormControlName)?.value;
-        const fuelCost = +(this.gasolatorForm?.get(this.fuelCostControlName)?.value);
-        const costForDay = +(this.gasolatorForm?.get(this.costForDayControlName)?.value);
-
-        if (kmType === 'lKm') {
-          consumption = costLKm + 'l/100km';
-          travelCost =
-            +(distanceKmVal / 100).toFixed(2) *
-            costLKm *
-            fuelCost +
-            costForDay;
-        } else {
-          consumption = costKmL + 'km/l';
-          travelCost =
-            +((distanceKmVal) / (costKmL)).toFixed(2) *
-            fuelCost +
-            costForDay;
-        }
-        if (Number.isNaN(travelCost)) {
-          travelCost = 0;
-        }
-
-        this.travelMessage.emit(`The trip of ${distanceKmVal.toFixed(2)} km will cost €${(+travelCost).toFixed(2)}, considering the fuel cost (€${fuelCost}), vehicle wear (€${costForDay}), and average fuel consumption (${consumption}). The price does not include extra transport costs.`)
-
+      const metrics = this.routeMetrics();
+      if (metrics.distanceKm > 0) {
+        this.routeSummaryChange.emit(this.calculateRouteSummary(metrics));
       }
     })
   }
@@ -94,6 +70,8 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
       [this.costLKmFormControlName]: ['0'],
     });
 
+    this.tryFillFromCurrentLocation();
+
     this.gasolatorForm.get(this.selectKmTypeName)?.valueChanges.subscribe(val => {
       if (val === 'kmL') {
         this.gasolatorForm?.get(this.costLKmFormControlName)?.clearValidators();
@@ -105,6 +83,66 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
       this.costKmFormControlName = val;
       this.gasolatorForm?.updateValueAndValidity();
     })
+  }
+
+  private tryFillFromCurrentLocation(): void {
+    const fromControl = this.gasolatorForm?.get(`${this.itineraryFormName}.${this.fromFormName}`);
+    if (!fromControl || fromControl.value) {
+      return;
+    }
+
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          // reverse geocode to get a human readable address
+          this.restService.reverseGeocode(position.coords.latitude, position.coords.longitude).subscribe(res => {
+            if (res) {
+              fromControl.setValue({
+                display_name: res.display_name,
+                lat: Number(res.lat),
+                lon: Number(res.lon),
+              });
+            } else {
+              fromControl.setValue({
+                display_name: this.translate.instant('MAP.CURRENT_LOCATION'),
+                lat: position.coords.latitude,
+                lon: position.coords.longitude,
+              });
+            }
+          });
+        },
+        () => {
+          // Se l'utente non consente o la geolocalizzazione non è disponibile, non facciamo nulla.
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 },
+      );
+    }
+  }
+
+  public recalcFromCurrentLocation(): void {
+    const fromControl = this.gasolatorForm?.get(`${this.itineraryFormName}.${this.fromFormName}`);
+    if (!fromControl) return;
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        this.restService.reverseGeocode(position.coords.latitude, position.coords.longitude).subscribe(res => {
+          if (res) {
+            fromControl.setValue({
+              display_name: res.display_name,
+              lat: Number(res.lat),
+              lon: Number(res.lon),
+            });
+          } else {
+            fromControl.setValue({
+              display_name: this.translate.instant('MAP.CURRENT_LOCATION'),
+              lat: position.coords.latitude,
+              lon: position.coords.longitude,
+            });
+          }
+        })
+      }, () => {
+        // ignore error
+      }, { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 });
+    }
   }
 
   calculateCost() {
@@ -127,6 +165,39 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
       })
     })
     this.exceuteCalculate.emit({ coordinate: {from: this.fromLatLng, to: this.toLatLng, intermediateStops}, isRoundTrip: this.gasolatorForm?.get(this.roundTripControlName)?.value })
+  }
+
+  private calculateRouteSummary(metrics: RouteMetrics): RouteSummary {
+    let fuelOnlyCost = 0;
+    let consumption = '0 km/l';
+    const kmType = this.gasolatorForm?.get(this.selectKmTypeName)?.value;
+    const costLKm = +this.gasolatorForm?.get(this.costLKmFormControlName)?.value;
+    const costKmL = +this.gasolatorForm?.get(this.costKmLFormControlName)?.value;
+    const fuelPrice = +this.gasolatorForm?.get(this.fuelCostControlName)?.value;
+    const vehicleWearCost = +this.gasolatorForm?.get(this.costForDayControlName)?.value || 0;
+    // tolls removed; set tollCost to 0 implicitly
+
+    if (kmType === 'lKm') {
+      consumption = `${costLKm} l/100km`;
+      fuelOnlyCost = (metrics.distanceKm / 100) * costLKm * fuelPrice;
+    } else {
+      consumption = `${costKmL} km/l`;
+      fuelOnlyCost = costKmL > 0 ? (metrics.distanceKm / costKmL) * fuelPrice : 0;
+    }
+
+    if (Number.isNaN(fuelOnlyCost)) {
+      fuelOnlyCost = 0;
+    }
+
+    const totalCost = fuelOnlyCost + vehicleWearCost;
+
+    return {
+      ...metrics,
+      fuelCost: fuelOnlyCost,
+      vehicleWearCost,
+      totalCost,
+      consumption
+    };
   }
 
   get intermediateStops(): FormArray {

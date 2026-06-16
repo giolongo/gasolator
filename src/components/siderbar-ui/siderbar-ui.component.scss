@@ -18,6 +18,7 @@
     margin: auto;
     margin-left: 10px;
     margin-right: 10px;
+    gap: 0.35rem;
   }
 
   button {
@@ -25,15 +26,40 @@
   }
 
   .logo-img {
-    height: 20%; margin-left: auto; margin-right: auto;
+    height: 20%;
+    max-height: 8rem;
+    object-fit: contain;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .sidebar-container {
-    display: flex; width: 100%; height: 100%; flex-direction: column;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    overflow-y: auto;
   }
 
-  mat-slide-toggle {
+  .trip-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     margin-bottom: 1rem;
+  }
+
+  .add-stop {
+    margin-bottom: 1rem;
+  }
+
+  .consumption-card {
+    display: flex;
+    flex-direction: column;
+    margin: 1rem;
+  }
+
+  .consumption-toggle {
+    margin: auto auto 1vh;
   }
 
   a {
@@ -44,6 +70,6 @@
 }
 
 a img {
-    max-width: 100%; /* Impedisce che l'immagine diventi più grande del suo contenitore */
+    max-width: 5rem; /* Impedisce che l'immagine diventi più grande del suo contenitore */
     height: auto; /* Mantiene la proporzione corretta dell'immagine */
 }
