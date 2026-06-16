@@ -1,3 +1,9 @@
+<div *ngIf="updateAvailable()" style="background-color: #fff3cd; border: 1px solid #ffc107; padding: 12px; text-align: center; position: fixed; top: 56px; left: 0; right: 0; z-index: 1000; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+  <span style="flex: 1; color: #856404; font-size: 14px;">Aggiornamento disponibile | Update available - Riavvia l'app | Close and reopen</span>
+  <button type="button" mat-icon-button (click)="refreshApp()" aria-label="refresh" style="margin-left: 8px;" title="Riavvia / Refresh">
+    <mat-icon>refresh</mat-icon>
+  </button>
+</div>
 <app-car-loader *ngIf="isLoading$ | async"></app-car-loader>
 <mat-drawer-container autosize>
   <mat-drawer #drawer mode="over">

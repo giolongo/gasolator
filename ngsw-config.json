@@ -5,6 +5,7 @@
     {
       "name": "app",
       "installMode": "prefetch",
+      "updateMode": "prefetch",
       "resources": {
         "files": [
           "/favicon.ico",
@@ -26,5 +27,26 @@
         ]
       }
     }
+  ],
+  "dataGroups": [
+    {
+      "name": "api",
+      "urls": [
+        "/api/**",
+        "https://nominatim.openstreetmap.org/**",
+        "https://router.project-osrm.org/**"
+      ],
+      "cacheConfig": {
+        "strategy": "network-first",
+        "maxAge": "24h",
+        "maxSize": 100
+      }
+    }
+  ],
+  "navigationUrls": [
+    "/**",
+    "!/**/.*",
+    "!/**/*.*",
+    "!/**;/**"
   ]
 }

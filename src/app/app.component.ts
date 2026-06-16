@@ -1,6 +1,9 @@
 import { Component, effect, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MatDrawer, MatSidenavModule } from '@angular/material/sidenav';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { SwUpdate } from '@angular/service-worker';
 import { FooterFeatureComponent } from "../components/footer-feature/footer-feature.component";
 import { HeaderFeatureComponent } from "../components/header-feature/header-feature.component";
 import { SiderbarFeatureComponent } from "../components/siderbar-feature/siderbar-feature.component";
@@ -12,7 +15,7 @@ import { DistanceModel, RouteMetrics, RouteSummary } from '../models';
 
 @Component({
   selector: 'app-root',
-  imports: [HeaderFeatureComponent, FooterFeatureComponent, SiderbarFeatureComponent, MatSidenavModule, MapFeatureComponent, CarLoaderComponent, CommonModule, TranslateModule],
+  imports: [HeaderFeatureComponent, FooterFeatureComponent, SiderbarFeatureComponent, MatSidenavModule, MatIconModule, MatButtonModule, MapFeatureComponent, CarLoaderComponent, CommonModule, TranslateModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -25,8 +28,10 @@ export class AppComponent implements OnInit {
 
   private restService = inject(RestService);
   private translate = inject(TranslateService);
+  private swUpdate = inject(SwUpdate);
 
   public isLoading$ = this.restService.inLoading;
+  public updateAvailable = signal(false);
 
   @ViewChild('drawer', { static: true }) public drawer!: MatDrawer;
 
@@ -45,6 +50,24 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Check for PWA updates
+    if (this.swUpdate.isEnabled) {
+      // Check for updates every 60 seconds
+      setInterval(() => {
+        this.swUpdate.checkForUpdate().catch(() => {
+          // Silently fail if update check fails
+        });
+      }, 60000);
+
+      // Notify user when update is available
+      this.swUpdate.versionUpdates.subscribe((event) => {
+        if (event.type === 'VERSION_READY') {
+          this.updateAvailable.set(true);
+          console.log('New version available. Please refresh or close and reopen the app on iOS.');
+        }
+      });
+    }
+
     // default language
     this.translate.setDefaultLang('en');
     if ('geolocation' in navigator) {
@@ -68,6 +91,14 @@ export class AppComponent implements OnInit {
     })
     this.setViewportHeight();
     window.addEventListener('resize', this.setViewportHeight);
+  }
+
+  refreshApp(): void {
+    if (this.swUpdate.isEnabled) {
+      // On iOS, the user needs to manually close and reopen the app
+      // On other platforms, reload the page
+      window.location.reload();
+    }
   }
 
   setViewportHeight() {
