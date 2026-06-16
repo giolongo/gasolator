@@ -1,0 +1,22 @@
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Gasolator",
+  "url": "https://www.gasolator.com",
+  "description": "Calculate your trip cost in seconds with Gasolator! Enter your route, vehicle consumption, and fuel price to get an instant accurate cost estimate.",
+  "image": "https://www.gasolator.com/gasolator_logo.png",
+  "applicationCategory": "UtilityApplication",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "EUR",
+    "availability": "https://schema.org/InStock"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Gasolator"
+  },
+  "inLanguage": ["en", "it"]
+}
+</script>
