@@ -336,6 +336,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 --------------------------------------------------------------------------------
+Package: @ngx-translate/core
+License: "MIT"
+
+
+--------------------------------------------------------------------------------
+Package: @ngx-translate/http-loader
+License: "MIT"
+
+
+--------------------------------------------------------------------------------
 Package: @angular/cdk
 License: "MIT"
 

@@ -1,0 +1,39 @@
+{
+  "APP": {
+    "TITLE": "Gasolator"
+  },
+  "APP_INFO": {
+    "DEVELOPED_BY": "Developed By"
+  },
+  "SUMMARY": {
+    "TITLE": "Trip summary",
+    "DISTANCE": "Distance",
+    "TIME": "Time",
+    "FUEL": "Fuel",
+    "TOLLS": "Tolls",
+    "CONSUMPTION_NOTE": "Consumption",
+    "WEAR": "Vehicle wear",
+    "DETAILS": "Details",
+    "WARNINGS": "Warnings",
+    "TRIP_TOTAL": "Total"
+  },
+  "SIDEBAR": {
+    "ROUND_TRIP": "Round trip",
+    "ADD_STOP": "Add intermediate stop",
+    "COST_FOR_DAY": "Cost for travel (wear of the vehicle)",
+    "FUEL_COST": "Fuel cost (€/l)",
+    "KM_L": "Km/l",
+    "L_PER_100KM": "l/100Km",
+    "CALCULATE": "Calculate"
+  },
+  "MAP": {
+    "CURRENT_LOCATION": "Current location",
+    "FROM": "From",
+    "TO": "To",
+    "DISTANCE": "Distance",
+    "TIME": "Time",
+    "MIN": "min",
+    "HOUR": "h",
+    "WARNING_OSRM": "Duration estimated, without real-time traffic."
+  }
+}

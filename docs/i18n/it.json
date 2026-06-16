@@ -1,0 +1,39 @@
+{
+  "APP": {
+    "TITLE": "Gasolator"
+  },
+  "APP_INFO": {
+    "DEVELOPED_BY": "Sviluppato da"
+  },
+  "SUMMARY": {
+    "TITLE": "Riepilogo viaggio",
+    "DISTANCE": "Distanza",
+    "TIME": "Tempo",
+    "FUEL": "Carburante",
+    "TOLLS": "Caselli",
+    "CONSUMPTION_NOTE": "Consumo",
+    "WEAR": "Usura veicolo",
+    "DETAILS": "Dettagli",
+    "WARNINGS": "Avvisi",
+    "TRIP_TOTAL": "Totale"
+  },
+  "SIDEBAR": {
+    "ROUND_TRIP": "Andata e ritorno",
+    "ADD_STOP": "Aggiungi tappa intermedia",
+    "COST_FOR_DAY": "Costo viaggio (usura veicolo)",
+    "FUEL_COST": "Prezzo carburante (€/l)",
+    "KM_L": "Km/l",
+    "L_PER_100KM": "l/100Km",
+    "CALCULATE": "Calcola"
+  },
+  "MAP": {
+    "CURRENT_LOCATION": "Posizione corrente",
+    "FROM": "Da",
+    "TO": "A",
+    "DISTANCE": "Distanza",
+    "TIME": "Tempo",
+    "MIN": "min",
+    "HOUR": "h",
+    "WARNING_OSRM": "Durata stimata, senza traffico in tempo reale."
+  }
+}
