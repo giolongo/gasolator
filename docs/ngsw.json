@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1781630301561,
+  "timestamp": 1781630805797,
   "index": "/index.html",
   "assetGroups": [
     {
@@ -26,7 +26,7 @@
         "/chunk-YR5SMXTB.js",
         "/favicon.ico",
         "/index.html",
-        "/main-6KMAJT5V.js",
+        "/main-TU2EVA6W.js",
         "/manifest.webmanifest",
         "/polyfills-FFHMD2TL.js",
         "/styles-LLN34VOT.css"
@@ -60,7 +60,23 @@
       "patterns": []
     }
   ],
-  "dataGroups": [],
+  "dataGroups": [
+    {
+      "name": "api",
+      "patterns": [
+        "\\/api\\/.*",
+        "https:\\/\\/nominatim\\.openstreetmap\\.org\\/.*",
+        "https:\\/\\/router\\.project-osrm\\.org\\/.*"
+      ],
+      "strategy": "network-first",
+      "maxSize": 100,
+      "maxAge": 86400000,
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "version": 1
+    }
+  ],
   "hashTable": {
     "/car.gif": "053b8471b5f4924870db8c2eba7689bfec670dd5",
     "/chunk-573YZOKB.js": "9639300176fcb4f86f10eece6143fa2892b19609",
@@ -91,8 +107,8 @@
     "/icons/icon-512x512.png": "bf197e7ca70e6440ec9362aae6f36ae21d2a78a9",
     "/icons/icon-72x72.png": "f4cb57d0a97d2a71362278ce6134f66d7f75f490",
     "/icons/icon-96x96.png": "454cdcced0b88f5ddd802631cb7c72536ea13cd7",
-    "/index.html": "a6100b010fd7dd8be343a26849a34aef3b4dbbfd",
-    "/main-6KMAJT5V.js": "41735990a1a9bfe85ed264f7515173ebcdb28af8",
+    "/index.html": "ca33ceb42daac33552d1ba0eece09f59072fede2",
+    "/main-TU2EVA6W.js": "5b1b6d4374cdaee6ac84fd99e0c65b339d2a5cd4",
     "/manifest.webmanifest": "d49c111bc9f8c7b47c834e3b5e185b9ff0d268dc",
     "/polyfills-FFHMD2TL.js": "f49b49a155bc7d192db62a4c15d0a612b460a667",
     "/styles-LLN34VOT.css": "1fb333ecf0a98a38c26b3210bc7507963a142608"
@@ -104,15 +120,15 @@
     },
     {
       "positive": false,
+      "regex": "^\\/(?:.+\\/)?\\.[^/]*$"
+    },
+    {
+      "positive": false,
       "regex": "^\\/(?:.+\\/)?[^/]*\\.[^/]*$"
     },
     {
       "positive": false,
-      "regex": "^\\/(?:.+\\/)?[^/]*__[^/]*$"
-    },
-    {
-      "positive": false,
-      "regex": "^\\/(?:.+\\/)?[^/]*__[^/]*\\/.*$"
+      "regex": "^\\/[^/]*[^/]*;\\/.*$"
     }
   ],
   "navigationRequestStrategy": "performance"
