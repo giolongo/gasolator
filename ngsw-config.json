@@ -37,7 +37,7 @@
         "https://router.project-osrm.org/**"
       ],
       "cacheConfig": {
-        "strategy": "network-first",
+        "strategy": "freshness",
         "maxAge": "24h",
         "maxSize": 100
       }
