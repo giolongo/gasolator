@@ -2,7 +2,11 @@
     <button mat-icon-button aria-label="open menu" (click)="openSidebar.emit()">
       <mat-icon>menu</mat-icon>
     </button>
-    <div style="margin-right: 0; margin-left: auto; height: 100%;">
+    <div style="margin-right: 0; margin-left: auto; height: 100%; display:flex; align-items:center; gap:8px;">
+        <button mat-icon-button aria-label="cambia lingua" (click)="toggleLanguage()" style="display:flex; align-items:center; gap:0.35rem; position:relative; margin-right: 15px;" title="{{ currentLang === 'it' ? 'Passa a English' : 'Switch to Italiano' }}">
+          <span class="flag-toggle" [ngClass]="{'active': currentLang === 'it'}">🇮🇹</span>
+          <span class="flag-toggle" [ngClass]="{'active': currentLang === 'en'}">🇬🇧</span>
+        </button>
         <img src="/gasolator_logo.png" alt="Gasolator Logo" style="height: 100%;">
     </div>
   </mat-toolbar>

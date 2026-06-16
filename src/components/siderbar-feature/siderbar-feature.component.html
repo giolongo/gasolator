@@ -10,11 +10,11 @@
 [selectKmTypeName]="selectKmTypeName"
 [costForDayControlName]="costForDayControlName"
 [fuelCostControlName]="fuelCostControlName"
-[tollCostControlName]="tollCostControlName"
 [roundTripControlName]="roundTripControlName"
 [mapFormControlNameNominationSuggest]="mapFormControlNameNominationSuggest"
 (exceuteCalculate)="calculateCost()"
 (addStop)="addStop()"
 (deleteElement)="deleteElement($event)"
+ (recalcFrom)="recalcFromCurrentLocation()"
 >
 </app-siderbar-ui>

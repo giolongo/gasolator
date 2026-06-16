@@ -8,6 +8,5 @@ export interface GasolatorModel {
     selectKmType: 'lKm' | 'kmL',
     costForDay: number,
     costFuel: number,
-    tollCost: number,
     roundTrip: boolean
 }

@@ -12,7 +12,7 @@
         <section *ngIf="routeSummary as summary" class="route-summary" [class.is-collapsed]="isSummaryCollapsed" aria-live="polite">
           <div class="summary-heading">
             <div>
-              <span>Riepilogo viaggio</span>
+              <span>{{ 'SUMMARY.TITLE' | translate }}</span>
               <strong>€{{ summary.totalCost.toFixed(2) }}</strong>
             </div>
             <button type="button" class="summary-toggle" (click)="toggleSummary()" [attr.aria-expanded]="!isSummaryCollapsed">
@@ -22,30 +22,24 @@
           <div class="summary-body" *ngIf="!isSummaryCollapsed">
             <div class="summary-grid">
               <div>
-                <span>Distanza</span>
+                <span>{{ 'SUMMARY.DISTANCE' | translate }}</span>
                 <strong>{{ summary.distanceKm.toFixed(2) }} km</strong>
               </div>
               <div>
-                <span>Tempo</span>
+                <span>{{ 'SUMMARY.TIME' | translate }}</span>
                 <strong>{{ formatDuration(summary.durationMinutes) }}</strong>
               </div>
               <div>
-                <span>Carburante</span>
+                <span>{{ 'SUMMARY.FUEL' | translate }}</span>
                 <strong>€{{ summary.fuelCost.toFixed(2) }}</strong>
               </div>
-              <div>
-                <span>Caselli</span>
-                <strong>€{{ summary.tollCost.toFixed(2) }}</strong>
-              </div>
             </div>
             <div class="summary-note">
-              Consumo {{ summary.consumption }} · Usura €{{ summary.vehicleWearCost.toFixed(2) }}
+              {{ 'SUMMARY.CONSUMPTION_NOTE' | translate }} {{ summary.consumption }} · {{ 'SUMMARY.WEAR' | translate }} €{{ summary.vehicleWearCost.toFixed(2) }}
             </div>
-            <div class="summary-note">
-              Caselli {{ summary.tollCostSource === 'estimated' ? 'stimati' : 'manuali' }} a €{{ summary.tollCost.toFixed(2) }}
-            </div>
+            <!-- tolls and segments removed -->
             <ul class="summary-warnings" *ngIf="summary.routeWarnings.length">
-              <li *ngFor="let warning of summary.routeWarnings">{{ warning }}</li>
+              <li *ngFor="let warning of summary.routeWarnings">{{ warning | translate }}</li>
             </ul>
           </div>
         </section>

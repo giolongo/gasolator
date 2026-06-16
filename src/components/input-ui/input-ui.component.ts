@@ -4,13 +4,14 @@ import { FormArray, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatAutocomplete, MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatButtonModule } from '@angular/material/button';
 import { NominationSuggestModel } from '../../models/nomination-suggest.model';
 import {MatIconModule} from '@angular/material/icon';
 
 @Component({
   selector: 'app-input-ui',
   imports: [MatFormFieldModule, CommonModule, ReactiveFormsModule, MatInputModule, MatIconModule,
-    MatAutocompleteModule],
+    MatAutocompleteModule, MatButtonModule],
   templateUrl: './input-ui.component.html',
   styleUrl: './input-ui.component.scss'
 })
@@ -25,8 +26,13 @@ export class InputUiComponent {
   public type = input<string>();
   public isAutocomplete = input<boolean>();
   public suggest = input<NominationSuggestModel[]>();
+  public suffixIcon = input<string>();
+  public suffixAriaLabel = input<string>();
+  public showSuffix = input<boolean>();
+  public showDeleteIcon = input<boolean>();
   
   public deleteElement = output<void>();
+  public suffixClick = output<void>();
 
   getOptionText(option: NominationSuggestModel) {
     return option.display_name;

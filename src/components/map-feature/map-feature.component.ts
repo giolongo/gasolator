@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, effect, inject, input, OnInit, output } from '@angular/core';
+import { Component, effect, inject, input, AfterViewInit, output } from '@angular/core';
 import { Feature, Overlay } from 'ol';
 import { Coordinate } from 'ol/coordinate';
 import Map from 'ol/Map';
@@ -11,9 +11,10 @@ import TileLayer from 'ol/layer/Tile';
 import { fromLonLat } from 'ol/proj';
 import { Vector as VectorSource } from 'ol/source';
 import OSM from 'ol/source/OSM';
-import { Icon, Stroke, Style } from 'ol/style';
-import { BehaviorSubject, combineLatest, Observable, tap } from 'rxjs';
-import { DistanceModel, OsrmRoute, RouteMetrics } from '../../models';
+import { Circle as CircleStyle, Fill, Icon, Stroke, Style } from 'ol/style';
+import { BehaviorSubject, combineLatest, Observable, tap, Subscription } from 'rxjs';
+import { DistanceModel, OsrmRoute, RouteMetrics, RouteSegment } from '../../models';
+import { TranslateService } from '@ngx-translate/core';
 import { RestService } from '../../services/rest.service';
 
 @Component({
@@ -22,16 +23,20 @@ import { RestService } from '../../services/rest.service';
   templateUrl: './map-feature.component.html',
   styleUrls: ['./map-feature.component.scss']
 })
-export class MapFeatureComponent implements OnInit {
+export class MapFeatureComponent implements AfterViewInit {
 
   public isGone$ = new BehaviorSubject<boolean>(true);
 
   private restService = inject(RestService);
+  private translate = inject(TranslateService);
 
   private combinedExtent: Extent = createEmpty();
 
   private dynamicLayers: VectorLayer<VectorSource>[] = [];
   private routeAnimationIds = new Set<number>();
+  private currentLocationLayer?: VectorLayer<VectorSource>;
+  private currentLocationOverlay?: Overlay;
+  private currentLocationOverlayLangSub?: Subscription;
 
   coordinate = input<{ coordinate: DistanceModel, isRoundTrip: boolean }>();
 
@@ -39,6 +44,7 @@ export class MapFeatureComponent implements OnInit {
   routeMetrics = output<RouteMetrics>();
   distanceInKmVal = 0;
   durationMinutesVal = 0;
+  // toll estimates removed
   // @Output() showToast = new EventEmitter<number>();
 
   map?: Map;
@@ -92,9 +98,8 @@ export class MapFeatureComponent implements OnInit {
               distanceKm: this.distanceInKmVal,
               durationMinutes: this.durationMinutesVal,
               routeWarnings: [
-                'Durata stimata da OSRM, senza traffico in tempo reale.',
-                'Chiusure e lavori sono considerati solo se presenti nei dati stradali OSRM/OpenStreetMap.'
-              ]
+                'MAP.WARNING_OSRM'
+              ],
             });
             this.combinedExtent = createEmpty()
           }
@@ -103,7 +108,9 @@ export class MapFeatureComponent implements OnInit {
     })
   }
 
-  ngOnInit(): void {
+  // toll data loading removed
+
+  ngAfterViewInit(): void {
     // 🔹 **Layer di base con OpenStreetMap**
     const osmLayer = new TileLayer({
       source: new OSM()
@@ -118,10 +125,83 @@ export class MapFeatureComponent implements OnInit {
         zoom: 12
       })
     });
-    this.centerOnUserLocation();
+
+    this.map.once('rendercomplete', () => {
+      this.centerOnUserLocation();
+    });
+
     this.isGone$.subscribe(() => {
       this.showGoneOrReturn();
-    })
+    });
+  }
+
+  private updateCurrentLocationMarker(userLon: number, userLat: number): void {
+    const currentLocation = new Feature({
+      geometry: new Point(fromLonLat([userLon, userLat]))
+    });
+
+    const currentLocationStyle = new Style({
+      image: new CircleStyle({
+        radius: 8,
+        fill: new Fill({ color: '#1976d2' }),
+        stroke: new Stroke({ color: '#ffffff', width: 2 })
+      })
+    });
+
+    currentLocation.setStyle(currentLocationStyle);
+
+    const vectorSource = new VectorSource({
+      features: [currentLocation]
+    });
+
+    if (this.currentLocationLayer) {
+      this.map?.removeLayer(this.currentLocationLayer);
+    }
+
+    this.currentLocationLayer = new VectorLayer({
+      source: vectorSource,
+      zIndex: 100
+    });
+
+    this.map?.addLayer(this.currentLocationLayer);
+    this.updateCurrentLocationOverlay(userLon, userLat);
+  }
+
+  private updateCurrentLocationOverlay(userLon: number, userLat: number): void {
+    const overlayElement = document.createElement('div');
+    overlayElement.className = 'current-location-tooltip';
+    overlayElement.style.padding = '4px 8px';
+    overlayElement.style.backgroundColor = 'rgba(25, 118, 210, 0.9)';
+    overlayElement.style.color = '#fff';
+    overlayElement.style.borderRadius = '4px';
+    overlayElement.style.fontSize = '0.75rem';
+    overlayElement.style.whiteSpace = 'nowrap';
+
+    if (this.currentLocationOverlayLangSub) {
+      this.currentLocationOverlayLangSub.unsubscribe();
+      this.currentLocationOverlayLangSub = undefined;
+    }
+    this.currentLocationOverlayLangSub = this.translate.stream('MAP.CURRENT_LOCATION').subscribe((val) => {
+      overlayElement.textContent = val;
+    });
+
+    if (this.currentLocationOverlay) {
+      this.map?.removeOverlay(this.currentLocationOverlay);
+      if (this.currentLocationOverlayLangSub) {
+        this.currentLocationOverlayLangSub.unsubscribe();
+        this.currentLocationOverlayLangSub = undefined;
+      }
+    }
+
+    this.currentLocationOverlay = new Overlay({
+      element: overlayElement,
+      position: fromLonLat([userLon, userLat]),
+      offset: [0, -25],
+      positioning: 'bottom-center',
+      stopEvent: false
+    });
+
+    this.map?.addOverlay(this.currentLocationOverlay);
   }
 
   private centerOnUserLocation(): void {
@@ -130,6 +210,7 @@ export class MapFeatureComponent implements OnInit {
         const userLon = position.coords.longitude;
         const userLat = position.coords.latitude;
         this.map?.getView().setCenter(fromLonLat([userLon, userLat]));
+        this.updateCurrentLocationMarker(userLon, userLat);
       }, (error) => {
         console.error("Errore geolocalizzazione:", error);
       });
@@ -235,13 +316,28 @@ export class MapFeatureComponent implements OnInit {
 
           const extent = routeLine.getExtent();
           this.combinedExtent = extend(this.combinedExtent, extent);
-          // this.map?.getView().fit(extent, { padding: [50, 50, 50, 50] });
-          const distance = data.routes[0].distance;
-          this.distanceInKmVal += (+(distance / 1000).toFixed(2));
-          const duration = data.routes[0].duration;
-          const durationMinutes = Math.round(duration / 60);
-          this.durationMinutesVal += durationMinutes;
 
+          const routeDistance = data.routes[0].distance;
+          const routeDuration = data.routes[0].duration;
+          const routeLegs = (data.routes[0] as any).legs ?? [];
+
+          const segments: RouteSegment[] = routeLegs.map((leg: any, index: number) => ({
+            name: leg.summary || `Tratta ${index + 1}`,
+            distanceKm: +(leg.distance / 1000).toFixed(2),
+            durationMinutes: Math.round(leg.duration / 60),
+          }));
+
+          this.distanceInKmVal += +(routeDistance / 1000).toFixed(2);
+          this.durationMinutesVal += Math.round(routeDuration / 60);
+
+          this.routeMetrics.emit({
+            distanceKm: this.distanceInKmVal,
+            durationMinutes: this.durationMinutesVal,
+            routeWarnings: [
+              'Durata stimata da OSRM, senza traffico in tempo reale.',
+              'Chiusure e lavori sono considerati solo se presenti nei dati stradali OSRM/OpenStreetMap.'
+            ],
+          });
           // 🔹 **Aggiungi overlay tooltip**
           const tooltipElement = document.createElement('div');
           tooltipElement.className = 'ol-tooltip';
@@ -261,7 +357,11 @@ export class MapFeatureComponent implements OnInit {
             const feature = this.map?.forEachFeatureAtPixel(evt.pixel, (f) => f);
             if (feature === routeFeature) {
               const coordinate = evt.coordinate;
-              tooltipElement.innerHTML = `<div style="text-align: left; font-size:.75rem"><div>From ${from}</div> <div>To ${to}</div> <div>Distance: ${(distance / 1000).toFixed(2)} km</div><div>Time: ${this.formatDuration(durationMinutes)}</div></div>`;
+              const tFrom = this.translate.instant('MAP.FROM');
+              const tTo = this.translate.instant('MAP.TO');
+              const tDistance = this.translate.instant('MAP.DISTANCE');
+              const tTime = this.translate.instant('MAP.TIME');
+              tooltipElement.innerHTML = `<div style="text-align: left; font-size:.75rem"><div>${tFrom} ${from}</div><div>${tTo} ${to}</div><div>${tDistance}: ${(routeDistance / 1000).toFixed(2)} km</div><div>${tTime}: ${this.formatDuration(Math.round(routeDuration / 60))}</div></div>`;
               tooltipOverlay.setPosition(coordinate);
               tooltipElement.style.display = 'block';
             } else {
@@ -339,6 +439,8 @@ export class MapFeatureComponent implements OnInit {
     this.routeAnimationIds.add(animationId);
   }
 
+  // Toll-related helpers removed
+
   private getRouteMeasure(coordinates: Coordinate[]): { cumulativeLengths: number[], totalLength: number } {
     const cumulativeLengths = [0];
 
@@ -390,10 +492,10 @@ export class MapFeatureComponent implements OnInit {
     const remainingMinutes = minutes % 60;
 
     if (hours === 0) {
-      return `${remainingMinutes} min`;
+      return `${remainingMinutes} ${this.translate.instant('MAP.MIN')}`;
     }
 
-    return `${hours} h ${remainingMinutes.toString().padStart(2, '0')} min`;
+    return `${hours} ${this.translate.instant('MAP.HOUR')} ${remainingMinutes.toString().padStart(2, '0')} ${this.translate.instant('MAP.MIN')}`;
   }
 
   // 🔹 **Funzione per decodificare la geometria Polyline**

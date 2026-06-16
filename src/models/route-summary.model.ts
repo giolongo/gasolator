@@ -4,11 +4,15 @@ export interface RouteMetrics {
   routeWarnings: string[];
 }
 
+export interface RouteSegment {
+  name: string;
+  distanceKm: number;
+  durationMinutes: number;
+}
+
 export interface RouteSummary extends RouteMetrics {
   fuelCost: number;
   vehicleWearCost: number;
-  tollCost: number;
-  tollCostSource: 'estimated' | 'manual';
   totalCost: number;
   consumption: string;
 }

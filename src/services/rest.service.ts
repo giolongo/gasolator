@@ -18,7 +18,7 @@ export class RestService {
 
   public getOsrmRoute(startLon: number, startLat: number, endLon: number, endLat: number): Observable<OsrmRoute> {
     return this.http.get<OsrmRoute>(
-      `${this.appConfig.niminatimUrl}/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=polyline`,
+      `${this.appConfig.niminatimUrl}/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=polyline&steps=true&annotations=distance,duration`,
     ).pipe(catchError(e => {
       console.error(e);
       return of({});
@@ -33,6 +33,24 @@ export class RestService {
     ).pipe(catchError(e => {
       console.error(e);
       return of([]);
+    }))
+  }
+
+  public reverseGeocode(lat: number, lon: number): Observable<NominationSuggestModel | null> {
+    let params = new HttpParams().set('notShowLoader', true);
+    return this.http.get<any>(
+      `${this.appConfig.osrmUrl}/reverse?format=json&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`,
+      { params }
+    ).pipe(map(res => {
+      if (!res) return null;
+      return {
+        display_name: res.display_name || '',
+        lat: res.lat || lat,
+        lon: res.lon || lon
+      } as NominationSuggestModel;
+    }), catchError(e => {
+      console.error(e);
+      return of(null);
     }))
   }
 }

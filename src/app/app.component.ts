@@ -1,4 +1,5 @@
 import { Component, effect, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MatDrawer, MatSidenavModule } from '@angular/material/sidenav';
 import { FooterFeatureComponent } from "../components/footer-feature/footer-feature.component";
 import { HeaderFeatureComponent } from "../components/header-feature/header-feature.component";
@@ -11,7 +12,7 @@ import { DistanceModel, RouteMetrics, RouteSummary } from '../models';
 
 @Component({
   selector: 'app-root',
-  imports: [HeaderFeatureComponent, FooterFeatureComponent, SiderbarFeatureComponent, MatSidenavModule, MapFeatureComponent, CarLoaderComponent, CommonModule],
+  imports: [HeaderFeatureComponent, FooterFeatureComponent, SiderbarFeatureComponent, MatSidenavModule, MapFeatureComponent, CarLoaderComponent, CommonModule, TranslateModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -23,6 +24,7 @@ export class AppComponent implements OnInit {
   isSummaryCollapsed = false;
 
   private restService = inject(RestService);
+  private translate = inject(TranslateService);
 
   public isLoading$ = this.restService.inLoading;
 
@@ -43,6 +45,24 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // default language
+    this.translate.setDefaultLang('en');
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        // simple Italy bounding box
+        if (lon >= 6.5 && lon <= 18.6 && lat >= 36.5 && lat <= 47.1) {
+          this.translate.use('it');
+        } else {
+          this.translate.use('en');
+        }
+      }, () => {
+        this.translate.use('en');
+      });
+    } else {
+      this.translate.use('en');
+    }
     this.drawer.closedStart.subscribe(() => {
       this.updateSidebarSignal(false)
     })
@@ -82,10 +102,10 @@ export class AppComponent implements OnInit {
     const remainingMinutes = minutes % 60;
 
     if (hours === 0) {
-      return `${remainingMinutes} min`;
+      return `${remainingMinutes} ${this.translate.instant('MAP.MIN')}`;
     }
 
-    return `${hours} h ${remainingMinutes.toString().padStart(2, '0')} min`;
+    return `${hours} ${this.translate.instant('MAP.HOUR')} ${remainingMinutes.toString().padStart(2, '0')} ${this.translate.instant('MAP.MIN')}`;
   }
 
 }
