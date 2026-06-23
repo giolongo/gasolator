@@ -83,21 +83,26 @@ app-map-feature {
     line-height: 1.1;
 }
 
-.summary-toggle {
-    width: 2rem;
-    height: 2rem;
-    flex: 0 0 2rem;
-    border: 1px solid #c9d7cf;
-    border-radius: 50%;
-    background: #ffffff;
-    color: #1c2420;
-    cursor: pointer;
-    font-size: 1.2rem;
-    line-height: 1;
+.summary-actions {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 0.1rem;
 }
 
-.summary-toggle:hover {
+.summary-actions button {
+    color: #1c2420;
+}
+
+.summary-actions button:hover {
     background: #edf4ef;
+}
+
+.share-feedback {
+    margin: -0.25rem 0 0.65rem;
+    color: #1f6f49;
+    font-size: 0.78rem;
+    font-weight: 600;
 }
 
 .summary-grid {
@@ -184,10 +189,8 @@ app-map-feature {
         grid-template-columns: 1fr;
     }
 
-    .summary-toggle {
-        width: 1.85rem;
-        height: 1.85rem;
-        flex-basis: 1.85rem;
+    .summary-actions {
+        gap: 0;
     }
 }
 

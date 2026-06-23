@@ -1,3 +1,10 @@
+:host {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
 .map-container {
     height: 100%;
     width: 100%;
@@ -38,9 +45,150 @@
     background: #edf4ef;
 }
 
+.fuel-station-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 80;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(18, 28, 23, 0.26);
+}
+
+.fuel-station-modal {
+    width: min(100%, 22rem);
+    border: 1px solid #dce6df;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1c2420;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.22);
+    overflow: hidden;
+}
+
+.fuel-station-modal header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1rem 0.75rem;
+    border-bottom: 1px solid #e5eee8;
+}
+
+.fuel-station-modal header span {
+    display: block;
+    color: #63736a;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.fuel-station-modal header strong {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 1rem;
+    line-height: 1.25;
+}
+
+.fuel-station-modal header button {
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    border-radius: 50%;
+    background: #edf4ef;
+    color: #26362e;
+    cursor: pointer;
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+.fuel-station-modal dl {
+    display: grid;
+    gap: 0.7rem;
+    margin: 0;
+    padding: 1rem;
+}
+
+.fuel-station-modal dl div {
+    display: grid;
+    gap: 0.2rem;
+}
+
+.fuel-station-modal dt {
+    color: #63736a;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.fuel-station-modal dd {
+    margin: 0;
+    color: #24342c;
+    line-height: 1.3;
+}
+
+.fuel-price-recap dd {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.fuel-price-recap dd div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.35rem 0;
+}
+
+.fuel-price-recap dd div.selected-price {
+    padding: 0.45rem 0.55rem;
+    border: 1px solid #1976d2;
+    border-radius: 6px;
+    background: #1976d2;
+    color: #ffffff;
+    box-shadow: 0 6px 16px rgba(25, 118, 210, 0.22);
+    font-weight: 800;
+}
+
+.fuel-price-recap dd div.selected-price strong,
+.fuel-price-recap dd div.selected-price span {
+    color: #ffffff;
+}
+
+.fuel-station-modal footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.55rem;
+    padding: 0 1rem 1rem;
+}
+
+.fuel-station-modal footer button {
+    min-height: 2.45rem;
+    border: 1px solid #c8d8ce;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #24342c;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.fuel-station-modal footer button.primary {
+    border-color: #1f6f49;
+    background: #1f6f49;
+    color: #ffffff;
+}
+
 @media (max-width: 640px) {
     .route-direction-control {
         top: 0.75rem;
         bottom: auto;
+    }
+
+    .fuel-station-modal-backdrop {
+        align-items: flex-end;
+        padding: 0.75rem;
+    }
+
+    .fuel-station-modal {
+        width: 100%;
     }
 }

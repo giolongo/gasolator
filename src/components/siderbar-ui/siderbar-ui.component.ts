@@ -50,9 +50,11 @@ export class SiderbarUiComponent {
   public costKmLFormControlName = input<string>();
   public costLKmFormControlName = input<string>();
   public costForDayControlName = input<string>();
-  // tollCostControlName removed
   public roundTripControlName = input<string>();
   public fuelCostControlName = input<string>();
+  public fuelTypeControlName = input<string>();
+  public usageModeControlName = input<string>();
+  public searchRadiusControlName = input<string>();
   public mapFormControlNameNominationSuggest =input<{[key: string | number]: NominationSuggestModel[]}>();
 
 

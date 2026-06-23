@@ -1,4 +1,5 @@
 export interface EnvironmentModel {
     osrmUrl: string,
-    niminatimUrl: string
+    niminatimUrl: string,
+    overpassUrl: string
 }

@@ -5,21 +5,21 @@ import { Coordinate } from 'ol/coordinate';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import { createEmpty, extend, Extent } from 'ol/extent';
-import { LineString, Point } from 'ol/geom';
+import { Circle as CircleGeometry, LineString, Point } from 'ol/geom';
 import { Vector as VectorLayer } from 'ol/layer';
 import TileLayer from 'ol/layer/Tile';
 import { fromLonLat } from 'ol/proj';
 import { Vector as VectorSource } from 'ol/source';
 import OSM from 'ol/source/OSM';
 import { Circle as CircleStyle, Fill, Icon, Stroke, Style } from 'ol/style';
-import { BehaviorSubject, combineLatest, Observable, tap, Subscription } from 'rxjs';
-import { DistanceModel, OsrmRoute, RouteMetrics, RouteSegment } from '../../models';
-import { TranslateService } from '@ngx-translate/core';
+import { BehaviorSubject, combineLatest, Subscription } from 'rxjs';
+import { FuelAreaSearch, FuelPrice, FuelSearchRequest, FuelStation, FuelType, OsrmRoute, RouteMetrics } from '../../models';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { RestService } from '../../services/rest.service';
 
 @Component({
   selector: 'app-map-feature',
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './map-feature.component.html',
   styleUrls: ['./map-feature.component.scss']
 })
@@ -37,78 +37,89 @@ export class MapFeatureComponent implements AfterViewInit {
   private currentLocationLayer?: VectorLayer<VectorSource>;
   private currentLocationOverlay?: Overlay;
   private currentLocationOverlayLangSub?: Subscription;
+  private fuelStationOverlays: Overlay[] = [];
+  private routeRequestId = 0;
+  private activeAreaSearch?: FuelAreaSearch;
+  private currentUserPosition?: { lat: number; lon: number };
+  protected selectedFuelStation?: FuelStation;
+  protected selectedFuelType: FuelType = 'petrol';
 
-  coordinate = input<{ coordinate: DistanceModel, isRoundTrip: boolean }>();
+  coordinate = input<FuelSearchRequest>();
 
 
   routeMetrics = output<RouteMetrics>();
-  distanceInKmVal = 0;
-  durationMinutesVal = 0;
-  // toll estimates removed
-  // @Output() showToast = new EventEmitter<number>();
 
   map?: Map;
 
+  protected showRouteDirectionControl(): boolean {
+    const request = this.coordinate();
+    return request?.mode === 'route' && request.isRoundTrip;
+  }
+
   constructor() {
     effect(() => {
-      this.routeMetrics.emit({ distanceKm: 0, durationMinutes: 0, routeWarnings: [] })
-      this.distanceInKmVal = 0;
-      this.durationMinutesVal = 0;
-      const promises = [];
-      if (this.coordinate()?.coordinate.from && this.coordinate()?.coordinate.to) {
-        this.removeDynamicLayers(); // 🔹 Rimuove i vecchi marker e route
-        const coordinate = this.coordinate()?.coordinate;
-        if (!coordinate?.intermediateStops || coordinate.intermediateStops.length === 0) {
-          const promise = this.initializeMap(coordinate?.from, coordinate?.to, true);
-          if (promise) {
-            promises.push(promise);
-          }
-        } else {
-          promises.push(this.initializeMap(coordinate?.from, coordinate?.intermediateStops[0], true));
-          promises.push(this.initializeMap(coordinate?.intermediateStops[coordinate?.intermediateStops.length - 1], coordinate?.to, true));
+      this.routeMetrics.emit(this.emptyRouteMetrics());
+      const request = this.coordinate();
+      if (!request) return;
+      const requestId = ++this.routeRequestId;
 
-          for (let i = 0; i < (coordinate?.intermediateStops?.length ?? 0) - 1; i++) {
-            promises.push(this.initializeMap(coordinate?.intermediateStops[i], coordinate?.intermediateStops[i + 1], true));
-          }
-        }
-        if (this.coordinate()?.isRoundTrip) {
-          const coordinate = this.coordinate()?.coordinate;
-          if (!coordinate?.intermediateStops || coordinate.intermediateStops.length === 0) {
-            const promise = this.initializeMap(coordinate?.to, coordinate?.from, false);
-            if (promise) {
-              promises.push(promise);
-            }
-          } else {
-            promises.push(this.initializeMap(coordinate?.to, coordinate?.intermediateStops[coordinate?.intermediateStops.length - 1], false));
-            promises.push(this.initializeMap(coordinate?.intermediateStops[0], coordinate?.from, false));
-
-            const reverseStops = [...(coordinate?.intermediateStops ?? [])].reverse();
-            for (let i = 0; i < reverseStops.length - 1; i++) {
-              promises.push(this.initializeMap(reverseStops[i], reverseStops[i + 1], false));
-            }
-          }
-        }
-        combineLatest(promises.filter(p => !!p)).subscribe({
-          next: () => {
-            if (this.map) {
-              this.map.getView().fit(this.combinedExtent, { padding: [50, 50, 50, 50] });
-            }
-            this.showGoneOrReturn();
-            this.routeMetrics.emit({
-              distanceKm: this.distanceInKmVal,
-              durationMinutes: this.durationMinutesVal,
-              routeWarnings: [
-                'MAP.WARNING_OSRM'
-              ],
-            });
-            this.combinedExtent = createEmpty()
-          }
-        })
+      if (request.mode === 'area') {
+        this.initializeAreaSearch(request, requestId);
+        return;
       }
+
+      if (!request.coordinate.from || !request.coordinate.to) return;
+
+      this.removeDynamicLayers();
+      this.activeAreaSearch = undefined;
+      const outboundPoints = [
+        request.coordinate.from,
+        ...(request.coordinate.intermediateStops ?? []),
+        request.coordinate.to,
+      ];
+      const routeRequests = [this.restService.getOsrmRoute(outboundPoints)];
+
+      if (request.isRoundTrip) {
+        routeRequests.push(this.restService.getOsrmRoute([...outboundPoints].reverse()));
+      }
+
+      outboundPoints.slice(0, -1).forEach((point, index) => {
+        const nextPoint = outboundPoints[index + 1];
+        this.addMarkers(+point.lon, +point.lat, +nextPoint.lon, +nextPoint.lat);
+      });
+
+      combineLatest(routeRequests).subscribe((routes) => {
+        if (requestId !== this.routeRequestId) return;
+        routes.forEach((route, index) => this.drawCalculatedRoute(route, index === 0));
+        this.map?.getView().fit(this.combinedExtent, { padding: [50, 50, 50, 50] });
+        this.showGoneOrReturn();
+        const metrics = this.aggregateRouteMetrics(routes);
+        this.routeMetrics.emit(metrics);
+        const routeCoordinates = routes.flatMap(response => {
+          const geometry = response.routes?.[0]?.geometry;
+          return geometry ? this.decodePolyline(geometry) : [];
+        });
+
+        this.selectedFuelType = request.fuelType;
+        this.restService.getFuelStations(routeCoordinates).subscribe(stations => {
+          if (requestId !== this.routeRequestId) return;
+          const visibleStations = stations.filter(station => this.hasSelectedFuel(station, request.fuelType));
+          this.addFuelStationMarkers(visibleStations, request.fuelType);
+          this.routeMetrics.emit({ ...metrics, fuelStationsCount: visibleStations.length });
+        });
+        this.combinedExtent = createEmpty();
+      });
     })
   }
 
-  // toll data loading removed
+  private emptyRouteMetrics(): RouteMetrics {
+    return {
+      distanceKm: 0,
+      durationMinutes: 0,
+      routeWarnings: [],
+      fuelStationsCount: null
+    };
+  }
 
   ngAfterViewInit(): void {
     // 🔹 **Layer di base con OpenStreetMap**
@@ -209,6 +220,7 @@ export class MapFeatureComponent implements AfterViewInit {
       navigator.geolocation.getCurrentPosition((position) => {
         const userLon = position.coords.longitude;
         const userLat = position.coords.latitude;
+        this.currentUserPosition = { lat: userLat, lon: userLon };
         this.map?.getView().setCenter(fromLonLat([userLon, userLat]));
         this.updateCurrentLocationMarker(userLon, userLat);
       }, (error) => {
@@ -219,11 +231,129 @@ export class MapFeatureComponent implements AfterViewInit {
     }
   }
 
-  initializeMap(from?: { lat: number | string, lon: number | string, name: string }, to?: { lat: number | string, lon: number | string, name: string }, isGone?: boolean): Observable<OsrmRoute> | void {
-    if (from && to) {
-      this.addMarkers(+from.lon, +from.lat, +to.lon, +to.lat);
-      return this.drawRoute(+from.lon, +from.lat, [+to.lon, +to.lat], from.name, to.name, isGone != null ? isGone : true);
+  private initializeAreaSearch(request: FuelAreaSearch, requestId: number): void {
+    this.removeDynamicLayers();
+    this.selectedFuelType = request.fuelType;
+    this.activeAreaSearch = request;
+
+    if (request.center) {
+      this.runAreaSearch({ ...request, center: request.center }, requestId, true);
+      return;
     }
+
+    if (this.currentUserPosition) {
+      this.runAreaSearch({ ...request, center: this.currentUserPosition }, requestId, true);
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(position => {
+      if (requestId !== this.routeRequestId) return;
+      const center = {
+        lat: position.coords.latitude,
+        lon: position.coords.longitude
+      };
+      this.currentUserPosition = center;
+      this.updateCurrentLocationMarker(center.lon, center.lat);
+      this.runAreaSearch({ ...request, center }, requestId, true);
+    });
+  }
+
+  private runAreaSearch(request: FuelAreaSearch & { center: { lat: number; lon: number } }, requestId: number, fitView: boolean): void {
+    this.removeDynamicLayers();
+    this.selectedFuelType = request.fuelType;
+    this.activeAreaSearch = request;
+    this.drawAreaSearch(request.center, request.radiusMeters);
+
+    if (fitView) {
+      this.map?.getView().animate({
+        center: fromLonLat([request.center.lon, request.center.lat]),
+        duration: 180,
+        zoom: this.getZoomForRadius(request.radiusMeters)
+      });
+    }
+
+    this.restService.getFuelStationsAround(request.center, request.radiusMeters).subscribe(stations => {
+      if (requestId !== this.routeRequestId) return;
+      const visibleStations = stations.filter(station => this.hasSelectedFuel(station, request.fuelType));
+      this.addFuelStationMarkers(visibleStations, request.fuelType);
+      this.routeMetrics.emit({
+        distanceKm: 0,
+        durationMinutes: 0,
+        routeWarnings: [],
+        fuelStationsCount: visibleStations.length
+      });
+    });
+  }
+
+  private drawAreaSearch(center: { lat: number; lon: number }, radiusMeters: number): void {
+    const centerCoordinate = fromLonLat([center.lon, center.lat]);
+    const projectedRadius = radiusMeters / Math.cos(center.lat * Math.PI / 180);
+    const circleFeature = new Feature({
+      geometry: new CircleGeometry(centerCoordinate, projectedRadius)
+    });
+    circleFeature.setStyle(new Style({
+      fill: new Fill({ color: 'rgba(25, 118, 210, 0.12)' }),
+      stroke: new Stroke({ color: '#1976d2', width: 2 })
+    }));
+
+    const centerFeature = new Feature({
+      geometry: new Point(centerCoordinate)
+    });
+    centerFeature.setStyle(new Style({
+      image: new CircleStyle({
+        radius: 7,
+        fill: new Fill({ color: '#1976d2' }),
+        stroke: new Stroke({ color: '#ffffff', width: 2 })
+      })
+    }));
+
+    const areaLayer = new VectorLayer({
+      source: new VectorSource({ features: [circleFeature, centerFeature] }),
+      zIndex: 60
+    });
+    this.dynamicLayers.push(areaLayer);
+    this.map?.addLayer(areaLayer);
+  }
+
+  private getZoomForRadius(radiusMeters: number): number {
+    const radius = Math.max(radiusMeters, 1);
+    return Math.max(8, Math.min(19, 20 - Math.log2(radius / 25)));
+  }
+
+  private aggregateRouteMetrics(routes: OsrmRoute[]): RouteMetrics {
+    return {
+      distanceKm: routes.reduce((sum, response) => sum + (response.routes?.[0]?.distance ?? 0), 0) / 1000,
+      durationMinutes: Math.round(routes.reduce((sum, response) => sum + (response.routes?.[0]?.duration ?? 0), 0) / 60),
+      routeWarnings: ['MAP.WARNING_OSRM'],
+      fuelStationsCount: null
+    };
+  }
+
+  private drawCalculatedRoute(response: OsrmRoute, isGone: boolean): void {
+    const route = response.routes?.[0];
+    if (!route?.geometry) return;
+
+    const color = isGone ? '#1f6f49' : '#1976d2';
+    const allCoordinates = this.decodePolyline(route.geometry).map(coordinate => fromLonLat(coordinate));
+    if (allCoordinates.length < 2) return;
+
+    const routeLine = new LineString(allCoordinates);
+    const routeFeature = new Feature(routeLine);
+    routeFeature.setStyle(new Style({ stroke: new Stroke({ color, width: 4 }) }));
+    const routeLayer = new VectorLayer({
+      source: new VectorSource({ features: [routeFeature] }),
+      properties: { isGone }
+    });
+
+    this.dynamicLayers.push(routeLayer);
+    this.map?.addLayer(routeLayer);
+    this.combinedExtent = extend(this.combinedExtent, routeLine.getExtent());
+
+    this.addAnimatedCar(routeLine, isGone);
   }
 
   removeDynamicLayers(): void {
@@ -232,7 +362,207 @@ export class MapFeatureComponent implements AfterViewInit {
       this.routeAnimationIds.clear();
       this.dynamicLayers.forEach(layer => this.map?.removeLayer(layer));
       this.dynamicLayers = []; // Svuota l'array
+      this.fuelStationOverlays.forEach(overlay => this.map?.removeOverlay(overlay));
+      this.fuelStationOverlays = [];
+      this.selectedFuelStation = undefined;
     }
+  }
+
+  private addFuelStationMarkers(stations: FuelStation[], fuelType: FuelType): void {
+    this.fuelStationOverlays.forEach(overlay => this.map?.removeOverlay(overlay));
+    this.fuelStationOverlays = [];
+    const bestPrice = this.getBestVisibleFuelPrice(stations, fuelType);
+
+    stations.forEach(station => {
+      const isBestStation = this.isBestVisibleFuelStation(station, fuelType, bestPrice);
+      const marker = document.createElement('button');
+      marker.type = 'button';
+      marker.title = station.name;
+      marker.setAttribute('aria-label', `${this.translate.instant('MAP.FUEL_STATION')}: ${station.name}`);
+      const brand = document.createElement('strong');
+      brand.textContent = `${isBestStation ? '★ ' : ''}${this.getBrandLabel(station)}`;
+      const price = document.createElement('span');
+      price.textContent = this.getMarkerPrice(station, fuelType);
+      marker.append(brand, price);
+      Object.assign(marker.style, {
+        width: isBestStation ? '88px' : '64px',
+        height: isBestStation ? '58px' : '42px',
+        padding: '4px 5px',
+        border: isBestStation ? '3px solid #ffffff' : '2px solid #ffffff',
+        borderRadius: isBestStation ? '9px' : '7px',
+        background: isBestStation ? '#1976d2' : this.getBrandColor(station.brand || station.name),
+        color: '#ffffff',
+        boxShadow: isBestStation ? '0 10px 26px rgba(25,118,210,.55), 0 0 0 7px rgba(25,118,210,.18)' : '0 2px 7px rgba(0,0,0,.3)',
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+        lineHeight: '1.05',
+        overflow: 'hidden',
+        transform: isBestStation ? 'translateY(-5px)' : 'none',
+        zIndex: isBestStation ? '2' : '1'
+      });
+      Object.assign(brand.style, {
+        display: 'block',
+        overflow: 'hidden',
+        fontSize: '11px',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap'
+      });
+      Object.assign(price.style, {
+        display: 'block',
+        marginTop: '3px',
+        fontSize: isBestStation ? '13px' : '11px',
+        fontWeight: '700',
+        whiteSpace: 'nowrap'
+      });
+      if (isBestStation) {
+        marker.animate([
+          {
+            transform: 'translateY(-5px) scale(1)',
+            boxShadow: '0 10px 26px rgba(25,118,210,.55), 0 0 0 6px rgba(25,118,210,.2)'
+          },
+          {
+            transform: 'translateY(-5px) scale(1.08)',
+            boxShadow: '0 14px 32px rgba(25,118,210,.68), 0 0 0 13px rgba(25,118,210,0)'
+          },
+          {
+            transform: 'translateY(-5px) scale(1)',
+            boxShadow: '0 10px 26px rgba(25,118,210,.55), 0 0 0 6px rgba(25,118,210,.2)'
+          }
+        ], {
+          duration: 1400,
+          iterations: Infinity,
+          easing: 'ease-in-out'
+        });
+      }
+      marker.addEventListener('click', event => {
+        event.stopPropagation();
+        this.openFuelStationModal(station, fuelType);
+      });
+
+      const overlay = new Overlay({
+        element: marker,
+        position: fromLonLat([station.lon, station.lat]),
+        positioning: 'center-center',
+        stopEvent: true
+      });
+      this.fuelStationOverlays.push(overlay);
+      this.map?.addOverlay(overlay);
+    });
+  }
+
+  protected openFuelStationModal(station: FuelStation, fuelType: FuelType): void {
+    this.selectedFuelType = fuelType;
+    this.selectedFuelStation = station;
+  }
+
+  protected closeFuelStationModal(): void {
+    this.selectedFuelStation = undefined;
+  }
+
+  protected getSelectedFuelPrice(station: FuelStation): FuelPrice | undefined {
+    return station.prices.find(price => price.type === this.selectedFuelType);
+  }
+
+  protected getFuelTypeLabel(type: FuelType): string {
+    return this.translate.instant(`MAP.FUEL_TYPES.${type.toUpperCase()}`);
+  }
+
+  protected getFuelStationUpdatedAt(station: FuelStation): string | undefined {
+    return station.prices.find(price => price.updatedAt)?.updatedAt;
+  }
+
+  protected openFuelStationInGoogleMaps(station: FuelStation): void {
+    window.open(this.buildFuelStationGoogleMapsUrl(station), '_blank', 'noopener,noreferrer');
+  }
+
+  protected async shareFuelStation(station: FuelStation): Promise<void> {
+    const price = this.getSelectedFuelPrice(station);
+    const text = [
+      station.name,
+      station.address,
+      `${this.getFuelTypeLabel(this.selectedFuelType)}: ${price ? this.getPriceText(price) : this.translate.instant('MAP.NOT_AVAILABLE')}`,
+      this.buildFuelStationGoogleMapsUrl(station)
+    ].filter(Boolean).join('\n');
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: station.name,
+          text
+        });
+        return;
+      } catch (error) {
+        if ((error as DOMException).name === 'AbortError') return;
+      }
+    }
+
+    window.location.href = `sms:?&body=${encodeURIComponent(text)}`;
+  }
+
+  private getBrandLabel(station: FuelStation): string {
+    const value = (station.brand || station.name).trim();
+    const knownBrand = [
+      ['agip', 'Eni'],
+      ['eni', 'Eni'],
+      ['q8', 'Q8'],
+      ['esso', 'Esso'],
+      ['tamoil', 'Tamoil'],
+      ['ip', 'IP'],
+      ['api', 'IP'],
+      ['pompe bianche', 'PB']
+    ].find(([match]) => value.toLowerCase().includes(match));
+    if (knownBrand) return knownBrand[1];
+    return value.length <= 9 ? value : value.slice(0, 8);
+  }
+
+  private hasSelectedFuel(station: FuelStation, fuelType: FuelType): boolean {
+    return station.prices.some(price => price.type === fuelType);
+  }
+
+  private getBestVisibleFuelPrice(stations: FuelStation[], fuelType: FuelType): number | undefined {
+    const prices = stations
+      .map(station => station.prices.find(price => price.type === fuelType)?.price)
+      .filter((price): price is number => price != null);
+    if (!prices.length) return undefined;
+
+    return Math.min(...prices);
+  }
+
+  private isBestVisibleFuelStation(station: FuelStation, fuelType: FuelType, bestPrice?: number): boolean {
+    if (bestPrice == null) return false;
+    return station.prices.find(price => price.type === fuelType)?.price === bestPrice;
+  }
+
+  private getMarkerPrice(station: FuelStation, fuelType: FuelType): string {
+    const primaryPrice = station.prices.find(price => price.type === fuelType);
+    if (primaryPrice?.price) return `€ ${primaryPrice.price.toFixed(3)}`;
+
+    if (primaryPrice?.displayPrice) return primaryPrice.displayPrice.length <= 10 ? primaryPrice.displayPrice : primaryPrice.displayPrice.slice(0, 9);
+    if (primaryPrice?.price === 0) return this.translate.instant('MAP.FREE');
+    return this.translate.instant('MAP.NOT_AVAILABLE');
+  }
+
+  protected getPriceText(price: FuelPrice): string {
+    if (price.displayPrice) return price.displayPrice;
+    if (price.price === 0) return this.translate.instant('MAP.FREE');
+    if (price.price == null) return this.translate.instant('MAP.NOT_AVAILABLE');
+
+    const unit = price.type === 'methane' ? 'kg' : price.type === 'electric' ? 'kWh' : 'l';
+    return `€ ${price.price.toFixed(3)}/${unit}`;
+  }
+
+  private getBrandColor(brand: string): string {
+    const palette = ['#176b45', '#a82f2f', '#185b85', '#5d4b8a', '#0f6b70', '#765220'];
+    const hash = [...brand].reduce((value, character) => value + character.charCodeAt(0), 0);
+    return palette[hash % palette.length];
+  }
+
+  private buildFuelStationGoogleMapsUrl(station: FuelStation): string {
+    const params = new URLSearchParams({
+      api: '1',
+      query: `${station.lat},${station.lon}`
+    });
+    return `https://www.google.com/maps/search/?${params.toString()}`;
   }
 
 
@@ -277,102 +607,6 @@ export class MapFeatureComponent implements AfterViewInit {
         l.setZIndex(isGoneProperties !== this.isGone$.value ? -1 : 50)
       }
     });
-  }
-
-  // 🔹 **Funzione per calcolare e disegnare il percorso**
-  drawRoute(startLon: number, startLat: number, endLonLat: number[], from: string, to: string, isGone: boolean): Observable<OsrmRoute> {
-    return this.restService.getOsrmRoute(startLon, startLat, endLonLat[0], endLonLat[1])
-      .pipe(tap(data => {
-        if (data && 'routes' in data && data.routes && data.routes.length > 0) {
-
-          const route = data.routes[0].geometry;
-          const coordinates = this.decodePolyline(route);
-
-          const transformedCoordinates = coordinates.map(coord => fromLonLat(coord));
-          const routeLine = new LineString(transformedCoordinates);
-          const routeFeature = new Feature(routeLine);
-          const color = this.getRandomColor();
-          const routeStyle = new Style({
-            stroke: new Stroke({
-              color,
-              width: 4,
-            }),
-          });
-
-          routeFeature.setStyle(routeStyle);
-
-          const routeSource = new VectorSource({
-            features: [routeFeature]
-          });
-
-          const routeLayer = new VectorLayer({
-            source: routeSource,
-            properties: { isGone }
-          });
-
-          this.dynamicLayers.push(routeLayer);
-          this.map?.addLayer(routeLayer);
-          this.addAnimatedCar(routeLine, isGone);
-
-          const extent = routeLine.getExtent();
-          this.combinedExtent = extend(this.combinedExtent, extent);
-
-          const routeDistance = data.routes[0].distance;
-          const routeDuration = data.routes[0].duration;
-          const routeLegs = (data.routes[0] as any).legs ?? [];
-
-          const segments: RouteSegment[] = routeLegs.map((leg: any, index: number) => ({
-            name: leg.summary || `Tratta ${index + 1}`,
-            distanceKm: +(leg.distance / 1000).toFixed(2),
-            durationMinutes: Math.round(leg.duration / 60),
-          }));
-
-          this.distanceInKmVal += +(routeDistance / 1000).toFixed(2);
-          this.durationMinutesVal += Math.round(routeDuration / 60);
-
-          this.routeMetrics.emit({
-            distanceKm: this.distanceInKmVal,
-            durationMinutes: this.durationMinutesVal,
-            routeWarnings: [
-              'Durata stimata da OSRM, senza traffico in tempo reale.',
-              'Chiusure e lavori sono considerati solo se presenti nei dati stradali OSRM/OpenStreetMap.'
-            ],
-          });
-          // 🔹 **Aggiungi overlay tooltip**
-          const tooltipElement = document.createElement('div');
-          tooltipElement.className = 'ol-tooltip';
-          tooltipElement.style.cssText = `background: ${this.hexToRgba(color)}; color: white; padding: 5px 10px; border-radius: 4px; white-space: nowrap;`;
-
-          const tooltipOverlay = new Overlay({
-            element: tooltipElement,
-            offset: [10, 0],
-            positioning: 'bottom-left',
-            stopEvent: false
-          });
-
-          this.map?.addOverlay(tooltipOverlay);
-
-          // 🔹 **Evento hover sulla linea**
-          this.map?.on('pointermove', (evt) => {
-            const feature = this.map?.forEachFeatureAtPixel(evt.pixel, (f) => f);
-            if (feature === routeFeature) {
-              const coordinate = evt.coordinate;
-              const tFrom = this.translate.instant('MAP.FROM');
-              const tTo = this.translate.instant('MAP.TO');
-              const tDistance = this.translate.instant('MAP.DISTANCE');
-              const tTime = this.translate.instant('MAP.TIME');
-              tooltipElement.innerHTML = `<div style="text-align: left; font-size:.75rem"><div>${tFrom} ${from}</div><div>${tTo} ${to}</div><div>${tDistance}: ${(routeDistance / 1000).toFixed(2)} km</div><div>${tTime}: ${this.formatDuration(Math.round(routeDuration / 60))}</div></div>`;
-              tooltipOverlay.setPosition(coordinate);
-              tooltipElement.style.display = 'block';
-            } else {
-              tooltipElement.style.display = 'none';
-            }
-          });
-
-        } else {
-          console.warn('Nessun percorso trovato.');
-        }
-      }));
   }
 
   private addAnimatedCar(routeLine: LineString, isGone: boolean): void {
@@ -438,8 +672,6 @@ export class MapFeatureComponent implements AfterViewInit {
     animationId = requestAnimationFrame(animate);
     this.routeAnimationIds.add(animationId);
   }
-
-  // Toll-related helpers removed
 
   private getRouteMeasure(coordinates: Coordinate[]): { cumulativeLengths: number[], totalLength: number } {
     const cumulativeLengths = [0];
