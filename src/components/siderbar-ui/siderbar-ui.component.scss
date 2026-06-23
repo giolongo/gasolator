@@ -13,24 +13,37 @@
   }
 
   form {
-    display: flex; 
-    flex-direction: column; 
-    margin: auto;
-    margin-left: 10px;
-    margin-right: 10px;
-    gap: 0.35rem;
+    display: flex;
+    flex-direction: column;
+    margin: 0 8px;
+    gap: 0.2rem;
+  }
+
+  form ::ng-deep mat-form-field {
+    margin-bottom: -0.65rem;
+  }
+
+  form ::ng-deep .mat-mdc-text-field-wrapper {
+    min-height: 2.75rem;
+  }
+
+  form ::ng-deep .mat-mdc-form-field-infix {
+    min-height: 2.75rem;
+    padding-top: 0.65rem;
+    padding-bottom: 0.35rem;
   }
 
   button {
-    margin-top: 10px;
+    margin-top: 6px;
   }
 
   .logo-img {
-    height: 20%;
-    max-height: 8rem;
+    height: 12%;
+    max-height: 4.5rem;
     object-fit: contain;
     margin-left: auto;
     margin-right: auto;
+    margin-bottom: 0.2rem;
   }
 
   .sidebar-container {
@@ -45,31 +58,178 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1rem;
+    margin: 0 0.35rem 0.35rem;
+  }
+
+  .usage-mode-toggle {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+    width: calc(100% - 1rem);
+    margin: 0.2rem 0.5rem 0.35rem;
+    border: 0;
+    overflow: visible;
+  }
+
+  .usage-mode-toggle ::ng-deep .mat-button-toggle {
+    border: 1px solid #d5e1da;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #33423a;
+  }
+
+  .usage-mode-toggle ::ng-deep .mat-button-toggle-appearance-standard .mat-button-toggle-label-content {
+    display: flex;
+    min-height: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.5rem;
+    line-height: 1.1;
+  }
+
+  .usage-mode-toggle ::ng-deep mat-icon {
+    width: 1.15rem;
+    height: 1.15rem;
+    font-size: 1.15rem;
+  }
+
+  .usage-mode-toggle ::ng-deep span {
+    font-size: 0.78rem;
+    font-weight: 800;
+  }
+
+  .usage-mode-toggle ::ng-deep .mat-button-toggle-checked {
+    border-color: #1976d2;
+    background: #1976d2;
+    color: #ffffff;
+    box-shadow: 0 6px 16px rgba(25, 118, 210, 0.24);
+  }
+
+  .mode-description {
+    margin: 0 0.55rem 0.55rem;
+    color: #5e6f66;
+    font-size: 0.76rem;
+    line-height: 1.25;
   }
 
   .add-stop {
-    margin-bottom: 1rem;
+    margin-bottom: 0.35rem;
   }
 
   .consumption-card {
     display: flex;
     flex-direction: column;
-    margin: 1rem;
+    margin: 0.55rem;
   }
 
   .consumption-toggle {
     margin: auto auto 1vh;
   }
 
+  .fuel-type-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin: 0.45rem;
+  }
+
+  .fuel-type-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #26362e;
+    font-weight: 800;
+  }
+
+  .fuel-type-heading mat-icon {
+    width: 1.2rem;
+    height: 1.2rem;
+    color: #1976d2;
+    font-size: 1.2rem;
+  }
+
+  .fuel-type-toggle {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+    width: 100%;
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+  }
+
+  .fuel-type-toggle ::ng-deep .mat-button-toggle {
+    border: 1px solid #d5e1da;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #33423a;
+    transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, color 160ms ease;
+  }
+
+  .fuel-type-toggle ::ng-deep .mat-button-toggle-appearance-standard .mat-button-toggle-label-content {
+    display: flex;
+    min-height: 2.2rem;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.3rem;
+    padding: 0.3rem 0.4rem;
+    line-height: 1.1;
+  }
+
+  .fuel-type-toggle ::ng-deep .mat-button-toggle mat-icon {
+    width: 1rem;
+    height: 1rem;
+    color: #66766d;
+    font-size: 1rem;
+    flex: 0 0 auto;
+  }
+
+  .fuel-type-toggle ::ng-deep .mat-button-toggle span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.74rem;
+    font-weight: 800;
+  }
+
+  .fuel-type-toggle ::ng-deep .mat-button-toggle:hover {
+    border-color: #9eb9aa;
+    background: #eef6f1;
+  }
+
+  .fuel-type-toggle ::ng-deep .mat-button-toggle-checked {
+    border-color: #1976d2;
+    background: #e8f2ff;
+    color: #105da9;
+    box-shadow: inset 0 0 0 1px #1976d2;
+  }
+
+  .fuel-type-toggle ::ng-deep .mat-button-toggle-checked mat-icon,
+  .fuel-type-toggle ::ng-deep .mat-button-toggle-checked span {
+    color: #105da9;
+  }
+
+  .radius-field {
+    margin-top: 0.65rem;
+  }
+
+  @media (max-width: 420px) {
+    .fuel-type-toggle {
+      grid-template-columns: 1fr;
+    }
+
+  }
+
   a {
     display: block;
-    margin: 0 auto;
+    margin: 0.45rem auto 0;
     text-align: center; /* Assicura che l'immagine sia centrata */
     width: fit-content; /* Fai in modo che il link si adatti alla larghezza dell'immagine */
 }
 
 a img {
-    max-width: 5rem; /* Impedisce che l'immagine diventi più grande del suo contenitore */
+    max-width: 2.4rem; /* Impedisce che l'immagine diventi più grande del suo contenitore */
     height: auto; /* Mantiene la proporzione corretta dell'immagine */
+    opacity: 0.86;
 }

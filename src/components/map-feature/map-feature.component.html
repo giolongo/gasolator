@@ -1,4 +1,4 @@
-<div *ngIf="coordinate()?.isRoundTrip" class="route-direction-control" role="group" aria-label="Direzione percorso">
+<div *ngIf="showRouteDirectionControl()" class="route-direction-control" role="group" aria-label="Direzione percorso">
   <button type="button" [class.active]="isGone$.value" (click)="isGone$.next(true)">
     Andata
   </button>
@@ -7,3 +7,54 @@
   </button>
 </div>
 <div id="map" class="map-container"></div>
+
+<div *ngIf="selectedFuelStation as station" class="fuel-station-modal-backdrop" (click)="closeFuelStationModal()">
+  <article class="fuel-station-modal" role="dialog" aria-modal="true" [attr.aria-label]="station.name" (click)="$event.stopPropagation()">
+    <header>
+      <div>
+        <span>{{ 'MAP.FUEL_STATION' | translate }}</span>
+        <strong>{{ station.name }}</strong>
+      </div>
+      <button type="button" (click)="closeFuelStationModal()" [attr.aria-label]="'MAP.CLOSE' | translate">
+        <span aria-hidden="true">×</span>
+      </button>
+    </header>
+
+    <dl>
+      <div *ngIf="station.brand && station.brand !== station.name">
+        <dt>{{ 'MAP.BRAND' | translate }}</dt>
+        <dd>{{ station.brand }}</dd>
+      </div>
+      <div *ngIf="station.address">
+        <dt>{{ 'MAP.ADDRESS' | translate }}</dt>
+        <dd>{{ station.address }}</dd>
+      </div>
+      <div *ngIf="station.openingHours">
+        <dt>{{ 'MAP.OPENING_HOURS' | translate }}</dt>
+        <dd>{{ station.openingHours }}</dd>
+      </div>
+      <div class="fuel-price-recap">
+        <dt>{{ 'MAP.PRICES' | translate }}</dt>
+        <dd>
+          <div *ngFor="let price of station.prices" [class.selected-price]="price.type === selectedFuelType">
+            <span>{{ getFuelTypeLabel(price.type) }}</span>
+            <strong>{{ getPriceText(price) }}</strong>
+          </div>
+        </dd>
+      </div>
+      <div *ngIf="getFuelStationUpdatedAt(station) as updatedAt">
+        <dt>{{ 'MAP.UPDATED' | translate }}</dt>
+        <dd>{{ updatedAt }}</dd>
+      </div>
+    </dl>
+
+    <footer>
+      <button type="button" (click)="shareFuelStation(station)">
+        {{ 'MAP.SHARE_MESSAGE' | translate }}
+      </button>
+      <button type="button" class="primary" (click)="openFuelStationInGoogleMaps(station)">
+        {{ 'SHARE.OPEN_GOOGLE_MAPS' | translate }}
+      </button>
+    </footer>
+  </article>
+</div>

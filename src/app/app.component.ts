@@ -3,6 +3,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MatDrawer, MatSidenavModule } from '@angular/material/sidenav';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { SwUpdate } from '@angular/service-worker';
 import { FooterFeatureComponent } from "../components/footer-feature/footer-feature.component";
 import { HeaderFeatureComponent } from "../components/header-feature/header-feature.component";
@@ -11,20 +12,26 @@ import { MapFeatureComponent } from "../components/map-feature/map-feature.compo
 import { CarLoaderComponent } from "../components/car-loader/car-loader.component";
 import { RestService } from '../services/rest.service';
 import { CommonModule } from '@angular/common';
-import { DistanceModel, RouteMetrics, RouteSummary } from '../models';
+import { FuelSearchRequest, RouteMetrics, RouteSummary } from '../models';
 
 @Component({
   selector: 'app-root',
-  imports: [HeaderFeatureComponent, FooterFeatureComponent, SiderbarFeatureComponent, MatSidenavModule, MatIconModule, MatButtonModule, MapFeatureComponent, CarLoaderComponent, CommonModule, TranslateModule],
+  imports: [HeaderFeatureComponent, FooterFeatureComponent, SiderbarFeatureComponent, MatSidenavModule, MatIconModule, MatButtonModule, MatTooltipModule, MapFeatureComponent, CarLoaderComponent, CommonModule, TranslateModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent implements OnInit {
   title = 'gasolator';
-  coordinate?: {coordinate: DistanceModel, isRoundTrip: boolean};
-  routeMetrics: RouteMetrics = { distanceKm: 0, durationMinutes: 0, routeWarnings: [] };
+  coordinate?: FuelSearchRequest;
+  routeMetrics: RouteMetrics = {
+    distanceKm: 0,
+    durationMinutes: 0,
+    routeWarnings: [],
+    fuelStationsCount: null
+  };
   routeSummary?: RouteSummary;
   isSummaryCollapsed = false;
+  shareFeedback = false;
 
   private restService = inject(RestService);
   private translate = inject(TranslateService);
@@ -106,7 +113,7 @@ export class AppComponent implements OnInit {
     document.documentElement.style.setProperty('--vh', `${vh}px`);
   }
 
-  calculateRoute(coordinateBean: {coordinate: DistanceModel, isRoundTrip: boolean}) {
+  calculateRoute(coordinateBean: FuelSearchRequest) {
     this.coordinate = coordinateBean
     this.routeSummary = undefined;
     this.drawer.close()
@@ -126,6 +133,64 @@ export class AppComponent implements OnInit {
 
   toggleSummary(): void {
     this.isSummaryCollapsed = !this.isSummaryCollapsed;
+  }
+
+  openInGoogleMaps(): void {
+    const url = this.buildGoogleMapsUrl();
+    if (url) window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  async shareRoute(): Promise<void> {
+    const url = this.buildGoogleMapsUrl();
+    if (!url) return;
+
+    const shareData = {
+      title: this.translate.instant('SHARE.TITLE'),
+      text: this.translate.instant('SHARE.TEXT'),
+      url
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch (error) {
+        if ((error as DOMException).name === 'AbortError') return;
+      }
+    }
+
+    await navigator.clipboard.writeText(url);
+    this.shareFeedback = true;
+    window.setTimeout(() => this.shareFeedback = false, 2200);
+  }
+
+  private buildGoogleMapsUrl(): string | undefined {
+    const request = this.coordinate;
+    if (!request || request.mode !== 'route' || !request.coordinate.from || !request.coordinate.to) return undefined;
+
+    const outbound = [
+      request.coordinate.from,
+      ...(request.coordinate.intermediateStops ?? []),
+      request.coordinate.to
+    ];
+    const route = request.isRoundTrip
+      ? [...outbound, ...outbound.slice(0, -1).reverse()]
+      : outbound;
+    const origin = route[0];
+    const destination = route[route.length - 1];
+    const waypoints = route.slice(1, -1);
+    const params = new URLSearchParams({
+      api: '1',
+      origin: `${origin.lat},${origin.lon}`,
+      destination: `${destination.lat},${destination.lon}`,
+      travelmode: 'driving'
+    });
+
+    if (waypoints.length) {
+      params.set('waypoints', waypoints.map(point => `${point.lat},${point.lon}`).join('|'));
+    }
+
+    return `https://www.google.com/maps/dir/?${params.toString()}`;
   }
 
   formatDuration(minutes: number): string {

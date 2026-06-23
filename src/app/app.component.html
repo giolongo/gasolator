@@ -21,10 +21,19 @@
               <span>{{ 'SUMMARY.TITLE' | translate }}</span>
               <strong>€{{ summary.totalCost.toFixed(2) }}</strong>
             </div>
-            <button type="button" class="summary-toggle" (click)="toggleSummary()" [attr.aria-expanded]="!isSummaryCollapsed">
-              {{ isSummaryCollapsed ? '+' : '-' }}
-            </button>
+            <div class="summary-actions">
+              <button type="button" mat-icon-button (click)="openInGoogleMaps()" [matTooltip]="'SHARE.OPEN_GOOGLE_MAPS' | translate" [attr.aria-label]="'SHARE.OPEN_GOOGLE_MAPS' | translate">
+                <mat-icon>map</mat-icon>
+              </button>
+              <button type="button" mat-icon-button (click)="shareRoute()" [matTooltip]="'SHARE.ACTION' | translate" [attr.aria-label]="'SHARE.ACTION' | translate">
+                <mat-icon>share</mat-icon>
+              </button>
+              <button type="button" mat-icon-button (click)="toggleSummary()" [matTooltip]="(isSummaryCollapsed ? 'SUMMARY.EXPAND' : 'SUMMARY.COLLAPSE') | translate" [attr.aria-expanded]="!isSummaryCollapsed" [attr.aria-label]="(isSummaryCollapsed ? 'SUMMARY.EXPAND' : 'SUMMARY.COLLAPSE') | translate">
+                <mat-icon>{{ isSummaryCollapsed ? 'expand_more' : 'expand_less' }}</mat-icon>
+              </button>
+            </div>
           </div>
+          <div class="share-feedback" *ngIf="shareFeedback" role="status">{{ 'SHARE.COPIED' | translate }}</div>
           <div class="summary-body" *ngIf="!isSummaryCollapsed">
             <div class="summary-grid">
               <div>
@@ -39,11 +48,14 @@
                 <span>{{ 'SUMMARY.FUEL' | translate }}</span>
                 <strong>€{{ summary.fuelCost.toFixed(2) }}</strong>
               </div>
+              <div>
+                <span>{{ 'SUMMARY.FUEL_STATIONS' | translate }}</span>
+                <strong>{{ summary.fuelStationsCount === null ? '…' : summary.fuelStationsCount }}</strong>
+              </div>
             </div>
             <div class="summary-note">
               {{ 'SUMMARY.CONSUMPTION_NOTE' | translate }} {{ summary.consumption }} · {{ 'SUMMARY.WEAR' | translate }} €{{ summary.vehicleWearCost.toFixed(2) }}
             </div>
-            <!-- tolls and segments removed -->
             <ul class="summary-warnings" *ngIf="summary.routeWarnings.length">
               <li *ngFor="let warning of summary.routeWarnings">{{ warning | translate }}</li>
             </ul>

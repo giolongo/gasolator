@@ -30,6 +30,17 @@
   ],
   "dataGroups": [
     {
+      "name": "fuel-data",
+      "urls": [
+        "/fuel-data/**"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxAge": "25h",
+        "maxSize": 700
+      }
+    },
+    {
       "name": "api",
       "urls": [
         "/api/**",

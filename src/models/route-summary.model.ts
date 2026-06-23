@@ -2,6 +2,7 @@ export interface RouteMetrics {
   distanceKm: number;
   durationMinutes: number;
   routeWarnings: string[];
+  fuelStationsCount: number | null;
 }
 
 export interface RouteSegment {

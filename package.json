@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "update:fuel-data": "node scripts/update-fuel-data.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
@@ -21,18 +22,19 @@
     "@angular/platform-browser-dynamic": "19.2.14",
     "@angular/router": "19.2.14",
     "@angular/service-worker": "19.2.14",
+    "@ngx-translate/core": "^14.0.0",
+    "@ngx-translate/http-loader": "^7.0.0",
     "ol": "^10.4.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
-    ,"@ngx-translate/core": "^14.0.0",
-    "@ngx-translate/http-loader": "^7.0.0"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "19.2.14",
     "@angular/cli": "19.2.14",
     "@angular/compiler-cli": "19.2.14",
     "@types/jasmine": "~5.1.0",
+    "csv-parse": "^6.2.1",
     "jasmine-core": "~5.5.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",

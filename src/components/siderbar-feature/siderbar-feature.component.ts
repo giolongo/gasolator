@@ -3,7 +3,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { debounceTime, filter, switchMap, tap } from 'rxjs';
 import { CoordinateModel } from '../../models/coordinate.model';
-import { DistanceModel, RouteMetrics, RouteSummary } from '../../models';
+import { DistanceModel, FuelSearchRequest, FuelType, RouteMetrics, RouteSummary } from '../../models';
 import { NominationSuggestModel } from '../../models/nomination-suggest.model';
 import { RestService } from '../../services/rest.service';
 import { autocompleteValidator } from '../../validators/autocomplete.validator';
@@ -19,11 +19,15 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
   private fb = inject(FormBuilder);
   private restService = inject(RestService);
   private translate = inject(TranslateService);
-  // toll estimates removed
 
-  protected exceuteCalculate = output<{coordinate: DistanceModel, isRoundTrip: boolean}>();
+  protected exceuteCalculate = output<FuelSearchRequest>();
   protected routeSummaryChange = output<RouteSummary>();
-  public routeMetrics = input<RouteMetrics>({ distanceKm: 0, durationMinutes: 0, routeWarnings: [] });
+  public routeMetrics = input<RouteMetrics>({
+    distanceKm: 0,
+    durationMinutes: 0,
+    routeWarnings: [],
+    fuelStationsCount: null
+  });
 
   public mapFormControlNameNominationSuggest: {[key: string | number]: NominationSuggestModel[]} = {};
 
@@ -40,6 +44,9 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
   public selectKmTypeName = 'selectKmType';
   public costForDayControlName = 'costForDay';
   public fuelCostControlName = 'costFuel';
+  public fuelTypeControlName = 'fuelType';
+  public usageModeControlName = 'usageMode';
+  public searchRadiusControlName = 'searchRadius';
   public roundTripControlName = 'roundTrip';
   public gasolatorForm?: FormGroup;
   public costKmFormControlName = this.costKmLFormControlName;
@@ -63,8 +70,11 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
         [this.toFormName]: ['', [Validators.required, autocompleteValidator()]] // Campo TO fisso
       }),
       [this.costForDayControlName]: ['0', Validators.required],
+      [this.usageModeControlName]: ['route', Validators.required],
+      [this.searchRadiusControlName]: [10000, [Validators.required, Validators.min(1)]],
       [this.selectKmTypeName]: ['kmL', Validators.required],
       [this.fuelCostControlName]: ['0', Validators.required],
+      [this.fuelTypeControlName]: ['petrol' satisfies FuelType, Validators.required],
       [this.costKmLFormControlName]: ['0', Validators.required],
       [this.roundTripControlName]: [true, Validators.required],
       [this.costLKmFormControlName]: ['0'],
@@ -83,6 +93,28 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
       this.costKmFormControlName = val;
       this.gasolatorForm?.updateValueAndValidity();
     })
+
+    this.gasolatorForm.get(this.usageModeControlName)?.valueChanges.subscribe(mode => {
+      const fromControl = this.itineraryForm.get(this.fromFormName);
+      const toControl = this.itineraryForm.get(this.toFormName);
+      if (mode === 'area') {
+        fromControl?.setValidators([Validators.required, autocompleteValidator()]);
+        toControl?.clearValidators();
+        this.intermediateStops.controls.forEach(control => {
+          control.clearValidators();
+          control.updateValueAndValidity();
+        });
+      } else {
+        fromControl?.setValidators([Validators.required, autocompleteValidator()]);
+        toControl?.setValidators([Validators.required, autocompleteValidator()]);
+        this.intermediateStops.controls.forEach(control => {
+          control.setValidators([Validators.required, autocompleteValidator()]);
+          control.updateValueAndValidity();
+        });
+      }
+      fromControl?.updateValueAndValidity();
+      toControl?.updateValueAndValidity();
+    });
   }
 
   private tryFillFromCurrentLocation(): void {
@@ -146,6 +178,22 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
   }
 
   calculateCost() {
+    const fuelType = this.gasolatorForm?.get(this.fuelTypeControlName)?.value as FuelType;
+
+    if (this.gasolatorForm?.get(this.usageModeControlName)?.value === 'area') {
+      const center = this.itineraryForm?.get(this.fromFormName)?.value;
+      this.exceuteCalculate.emit({
+        mode: 'area',
+        fuelType,
+        radiusMeters: +this.gasolatorForm?.get(this.searchRadiusControlName)?.value || 10000,
+        center: {
+          lat: +center.lat,
+          lon: +center.lon
+        }
+      });
+      return;
+    }
+
     const intermediateStops:CoordinateModel[] = []
     this.fromLatLng = {
       lat: this.itineraryForm?.get(this.fromFormName)?.value.lat,
@@ -164,7 +212,12 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
         name: c.value.display_name
       })
     })
-    this.exceuteCalculate.emit({ coordinate: {from: this.fromLatLng, to: this.toLatLng, intermediateStops}, isRoundTrip: this.gasolatorForm?.get(this.roundTripControlName)?.value })
+    this.exceuteCalculate.emit({
+      mode: 'route',
+      coordinate: {from: this.fromLatLng, to: this.toLatLng, intermediateStops},
+      isRoundTrip: this.gasolatorForm?.get(this.roundTripControlName)?.value,
+      fuelType
+    })
   }
 
   private calculateRouteSummary(metrics: RouteMetrics): RouteSummary {
@@ -175,8 +228,6 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
     const costKmL = +this.gasolatorForm?.get(this.costKmLFormControlName)?.value;
     const fuelPrice = +this.gasolatorForm?.get(this.fuelCostControlName)?.value;
     const vehicleWearCost = +this.gasolatorForm?.get(this.costForDayControlName)?.value || 0;
-    // tolls removed; set tollCost to 0 implicitly
-
     if (kmType === 'lKm') {
       consumption = `${costLKm} l/100km`;
       fuelOnlyCost = (metrics.distanceKm / 100) * costLKm * fuelPrice;

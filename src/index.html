@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Gasolator - Calculate Trip Cost Instantly</title>
-  <meta name="description" content="Calculate your trip cost in seconds with Gasolator! Enter your route, vehicle consumption, and fuel price to get an instant accurate cost estimate.">
-  <meta name="keywords" content="trip cost calculator, fuel cost, travel expense, route cost, vehicle consumption, fuel price calculator">
+  <title>Gasolator - Prezzi benzina e calcolo costo viaggio</title>
+  <meta name="description" content="Calcola il costo del viaggio e trova distributori in Italia con prezzi aggiornati di benzina, diesel, GPL e metano. Cerca carburante vicino a te o lungo il percorso.">
+  <meta name="keywords" content="prezzo benzina, costo benzina, prezzi carburanti, prezzo diesel, prezzo gasolio, prezzo GPL, prezzo metano, distributori vicino a me, distributori benzina Italia, calcolo costo viaggio, costo carburante percorso, benzina più economica">
   <meta name="author" content="Gasolator">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#1976d2">
@@ -13,19 +13,20 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
   <!-- Open Graph -->
-  <meta property="og:title" content="Gasolator - Calculate Trip Cost Instantly">
-  <meta property="og:description" content="Calculate your trip cost in seconds with Gasolator! Enter your route, vehicle consumption, and fuel price to get an instant cost estimate.">
+  <meta property="og:title" content="Gasolator - Prezzi benzina e calcolo costo viaggio">
+  <meta property="og:description" content="Trova distributori in Italia con prezzi carburante aggiornati e calcola il costo del viaggio in base a percorso, consumo e alimentazione.">
   <meta property="og:image" content="https://www.gasolator.com/gasolator_logo.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:url" content="https://www.gasolator.com">
   <meta property="og:type" content="website">
-  <meta property="og:locale" content="en_US">
+  <meta property="og:locale" content="it_IT">
+  <meta property="og:locale:alternate" content="en_US">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Gasolator - Calculate Trip Cost Instantly">
-  <meta name="twitter:description" content="Calculate your trip cost in seconds! Enter your route and vehicle details.">
+  <meta name="twitter:title" content="Gasolator - Prezzi benzina e costo viaggio">
+  <meta name="twitter:description" content="Calcola il costo del carburante e trova distributori in Italia con prezzi aggiornati.">
   <meta name="twitter:image" content="https://www.gasolator.com/gasolator_logo.png">
   
   <base href="/">
@@ -43,9 +44,20 @@
     "@type": "WebApplication",
     "name": "Gasolator",
     "url": "https://www.gasolator.com",
-    "description": "Calculate your trip cost in seconds with Gasolator! Enter your route, vehicle consumption, and fuel price to get an instant accurate cost estimate.",
+    "description": "Calcola il costo del viaggio e trova distributori in Italia con prezzi aggiornati di benzina, diesel, GPL e metano.",
     "image": "https://www.gasolator.com/gasolator_logo.png",
-    "applicationCategory": "UtilityApplication",
+    "applicationCategory": "TravelApplication",
+    "areaServed": {
+      "@type": "Country",
+      "name": "Italy"
+    },
+    "keywords": "prezzo benzina, prezzo diesel, distributori vicino a me, costo carburante, calcolo costo viaggio",
+    "featureList": [
+      "Calcolo costo viaggio",
+      "Prezzi carburanti in Italia",
+      "Distributori lungo il percorso",
+      "Distributori entro un raggio scelto"
+    ],
     "offers": {
       "@type": "Offer",
       "price": "0",
