@@ -4,9 +4,20 @@
   "@type": "WebApplication",
   "name": "Gasolator",
   "url": "https://www.gasolator.com",
-  "description": "Calculate your trip cost in seconds with Gasolator! Enter your route, vehicle consumption, and fuel price to get an instant accurate cost estimate.",
+  "description": "Calcola il costo del viaggio e trova distributori in Italia con prezzi aggiornati di benzina, diesel, GPL e metano.",
   "image": "https://www.gasolator.com/gasolator_logo.png",
-  "applicationCategory": "UtilityApplication",
+  "applicationCategory": "TravelApplication",
+  "areaServed": {
+    "@type": "Country",
+    "name": "Italy"
+  },
+  "keywords": "prezzo benzina, prezzo diesel, prezzo gasolio, prezzo GPL, prezzo metano, distributori vicino a me, costo carburante, calcolo costo viaggio",
+  "featureList": [
+    "Calcolo costo viaggio",
+    "Prezzi carburanti in Italia",
+    "Distributori lungo il percorso",
+    "Distributori entro un raggio scelto"
+  ],
   "offers": {
     "@type": "Offer",
     "price": "0",

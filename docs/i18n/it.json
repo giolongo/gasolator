@@ -10,21 +10,37 @@
     "DISTANCE": "Distanza",
     "TIME": "Tempo",
     "FUEL": "Carburante",
-    "TOLLS": "Caselli",
+    "FUEL_STATIONS": "Distributori lungo la tratta",
     "CONSUMPTION_NOTE": "Consumo",
     "WEAR": "Usura veicolo",
     "DETAILS": "Dettagli",
     "WARNINGS": "Avvisi",
-    "TRIP_TOTAL": "Totale"
+    "TRIP_TOTAL": "Totale",
+    "EXPAND": "Espandi riepilogo",
+    "COLLAPSE": "Comprimi riepilogo"
+  },
+  "SHARE": {
+    "TITLE": "Percorso Gasolator",
+    "TEXT": "Apri questo percorso su Google Maps",
+    "ACTION": "Condividi percorso",
+    "OPEN_GOOGLE_MAPS": "Apri in Google Maps",
+    "COPIED": "Link del percorso copiato"
   },
   "SIDEBAR": {
     "ROUND_TRIP": "Andata e ritorno",
+    "MODE_ROUTE": "Percorso",
+    "MODE_AREA": "Zona",
+    "MODE_ROUTE_DESCRIPTION": "Calcola costo viaggio, tempi e distributori lungo una tratta.",
+    "MODE_AREA_DESCRIPTION": "Trova distributori e prezzi entro un raggio scelto. Dati carburanti disponibili solo in Italia.",
     "ADD_STOP": "Aggiungi tappa intermedia",
     "COST_FOR_DAY": "Costo viaggio (usura veicolo)",
     "FUEL_COST": "Prezzo carburante (€/l)",
+    "FUEL_TYPE": "Alimentazione",
+    "SEARCH_RADIUS": "Raggio ricerca (m)",
     "KM_L": "Km/l",
     "L_PER_100KM": "l/100Km",
-    "CALCULATE": "Calcola"
+    "CALCULATE": "Calcola",
+    "APPLY": "Applica"
   },
   "MAP": {
     "CURRENT_LOCATION": "Posizione corrente",
@@ -34,6 +50,23 @@
     "TIME": "Tempo",
     "MIN": "min",
     "HOUR": "h",
-    "WARNING_OSRM": "Durata stimata, senza traffico in tempo reale."
+    "WARNING_OSRM": "Durata stimata, senza traffico in tempo reale.",
+    "FUEL_STATION": "Distributore",
+    "FUEL_STATIONS_UNAVAILABLE": "Non è stato possibile caricare i distributori lungo la tratta.",
+    "BRAND": "Compagnia",
+    "ADDRESS": "Indirizzo",
+    "OPENING_HOURS": "Orari",
+    "PRICES": "Prezzi",
+    "CLOSE": "Chiudi",
+    "SHARE_MESSAGE": "Condividi",
+    "NOT_AVAILABLE": "N/D",
+    "FREE": "Gratis",
+    "UPDATED": "Aggiornato",
+    "FUEL_TYPES": {
+      "PETROL": "Benzina",
+      "DIESEL": "Gasolio",
+      "LPG": "GPL",
+      "METHANE": "Metano"
+    }
   }
 }
