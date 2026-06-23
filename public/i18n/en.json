@@ -58,7 +58,7 @@
     "OPENING_HOURS": "Opening hours",
     "PRICES": "Prices",
     "CLOSE": "Close",
-    "SHARE_MESSAGE": "Message",
+    "SHARE_MESSAGE": "Share",
     "NOT_AVAILABLE": "N/A",
     "FREE": "Free",
     "UPDATED": "Updated",
@@ -66,8 +66,7 @@
       "PETROL": "Petrol",
       "DIESEL": "Diesel",
       "LPG": "LPG",
-      "METHANE": "Methane",
-      "ELECTRIC": "Electric"
+      "METHANE": "Methane"
     }
   }
 }

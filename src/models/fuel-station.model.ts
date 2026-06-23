@@ -1,4 +1,4 @@
-export type FuelType = 'petrol' | 'diesel' | 'lpg' | 'methane' | 'electric';
+export type FuelType = 'petrol' | 'diesel' | 'lpg' | 'methane';
 export type UsageMode = 'route' | 'area';
 
 export interface FuelPrice {

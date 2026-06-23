@@ -12,12 +12,18 @@ const FUEL_TYPES = new Map([
   ['gpl', 'lpg'],
   ['metano', 'methane']
 ]);
+const runStartedAt = new Date();
+
+console.log(`Download dati carburante avviato il ${formatDateTime(runStartedAt)}.`);
 
 const [stationsCsv, pricesCsv] = await Promise.all([
   download(SOURCES.stations),
   download(SOURCES.prices)
 ]);
 const extractionDate = readExtractionDate(pricesCsv);
+
+console.log(`Dati carburante scaricati il ${formatDateTime(new Date())}. Dataset MIMIT: ${extractionDate}.`);
+
 const stations = parseMimitCsv(stationsCsv);
 const pricesByStation = groupPrices(parseMimitCsv(pricesCsv));
 const cells = new Map();
@@ -54,7 +60,7 @@ await writeFile(
   JSON.stringify({ updatedAt: extractionDate, gridSize: 0.25, cells: [...cells.keys()].sort() })
 );
 
-console.log(`Generated ${cells.size} cells from ${stations.length} stations (${extractionDate}).`);
+console.log(`Dati carburante aggiornati: ${cells.size} celle generate da ${stations.length} impianti (${extractionDate}).`);
 
 async function download(url) {
   const response = await fetch(url, { headers: { 'user-agent': 'Gasolator fuel-data updater' } });
@@ -105,4 +111,12 @@ function groupPrices(rows) {
 
 function gridKey(lat, lon) {
   return `${Math.floor(lat * 4)}_${Math.floor(lon * 4)}`;
+}
+
+function formatDateTime(date) {
+  return new Intl.DateTimeFormat('it-IT', {
+    timeZone: 'Europe/Rome',
+    dateStyle: 'short',
+    timeStyle: 'medium'
+  }).format(date);
 }

@@ -2,6 +2,5 @@ import { EnvironmentModel } from "../models/envirnoment.model";
 
 export const environment: EnvironmentModel = {
     niminatimUrl: 'https://router.project-osrm.org',
-    osrmUrl: 'https://nominatim.openstreetmap.org',
-    overpassUrl: 'https://overpass-api.de/api/interpreter'
+    osrmUrl: 'https://nominatim.openstreetmap.org'
   };

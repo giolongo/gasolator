@@ -477,18 +477,19 @@ export class MapFeatureComponent implements AfterViewInit {
 
   protected async shareFuelStation(station: FuelStation): Promise<void> {
     const price = this.getSelectedFuelPrice(station);
+    const url = this.buildFuelStationGoogleMapsUrl(station);
     const text = [
       station.name,
       station.address,
-      `${this.getFuelTypeLabel(this.selectedFuelType)}: ${price ? this.getPriceText(price) : this.translate.instant('MAP.NOT_AVAILABLE')}`,
-      this.buildFuelStationGoogleMapsUrl(station)
+      `${this.getFuelTypeLabel(this.selectedFuelType)}: ${price ? this.getPriceText(price) : this.translate.instant('MAP.NOT_AVAILABLE')}`
     ].filter(Boolean).join('\n');
 
     if (navigator.share) {
       try {
         await navigator.share({
           title: station.name,
-          text
+          text,
+          url
         });
         return;
       } catch (error) {
@@ -496,7 +497,7 @@ export class MapFeatureComponent implements AfterViewInit {
       }
     }
 
-    window.location.href = `sms:?&body=${encodeURIComponent(text)}`;
+    await navigator.clipboard.writeText(`${text}\n${url}`);
   }
 
   private getBrandLabel(station: FuelStation): string {
@@ -547,7 +548,7 @@ export class MapFeatureComponent implements AfterViewInit {
     if (price.price === 0) return this.translate.instant('MAP.FREE');
     if (price.price == null) return this.translate.instant('MAP.NOT_AVAILABLE');
 
-    const unit = price.type === 'methane' ? 'kg' : price.type === 'electric' ? 'kWh' : 'l';
+    const unit = price.type === 'methane' ? 'kg' : 'l';
     return `€ ${price.price.toFixed(3)}/${unit}`;
   }
 

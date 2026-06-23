@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { BehaviorSubject, catchError, forkJoin, from, map, mergeMap, Observable, of, shareReplay, switchMap, toArray } from 'rxjs';
+import { BehaviorSubject, catchError, from, map, mergeMap, Observable, of, shareReplay, switchMap, toArray } from 'rxjs';
 import { CoordinateModel, FuelDataManifest, FuelStation, NominationSuggestModel, OsrmRoute } from '../models';
 import { APP_CONFIG } from '../injections/tokens.injection';
 
@@ -33,19 +33,13 @@ export class RestService {
   public getFuelStations(routeCoordinates: [number, number][]): Observable<FuelStation[]> {
     if (routeCoordinates.length < 2) return of([]);
 
-    return forkJoin([
-      this.getMimitFuelStations(routeCoordinates),
-      this.getElectricStations(routeCoordinates)
-    ]).pipe(map(([fuelStations, electricStations]) => [...fuelStations, ...electricStations]));
+    return this.getMimitFuelStations(routeCoordinates);
   }
 
   public getFuelStationsAround(center: { lat: number; lon: number }, radiusMeters: number): Observable<FuelStation[]> {
     const radiusKm = Math.max(radiusMeters, 1) / 1000;
 
-    return forkJoin([
-      this.getMimitFuelStationsAround(center, radiusKm),
-      this.getElectricStationsAround(center, radiusMeters)
-    ]).pipe(map(([fuelStations, electricStations]) => [...fuelStations, ...electricStations]));
+    return this.getMimitFuelStationsAround(center, radiusKm);
   }
 
   private getMimitFuelStations(routeCoordinates: [number, number][]): Observable<FuelStation[]> {
@@ -98,87 +92,6 @@ export class RestService {
       }),
       catchError(error => {
         console.error('Unable to load MIMIT fuel prices', error);
-        return of([]);
-      })
-    );
-  }
-
-  private getElectricStations(routeCoordinates: [number, number][]): Observable<FuelStation[]> {
-
-    const sampledCoordinates = this.sampleCoordinates(routeCoordinates, 500);
-    const polyline = sampledCoordinates.map(([lon, lat]) => `${lat},${lon}`).join(',');
-    const query = `[out:json][timeout:25];nwr["amenity"="charging_station"](around:${Math.round(this.routeFuelCorridorKm * 1000)},${polyline});out center tags;`;
-    const url = `${this.appConfig.overpassUrl}?data=${encodeURIComponent(query)}`;
-
-    return this.http.jsonp<OverpassResponse>(url, 'jsonp').pipe(
-      map((response: OverpassResponse) => (response.elements ?? [])
-        .flatMap(element => {
-          const lat = element.lat ?? element.center?.lat;
-          const lon = element.lon ?? element.center?.lon;
-          if (lat == null || lon == null) return [];
-
-          const tags = element.tags ?? {};
-          const address = [tags['addr:street'], tags['addr:housenumber'], tags['addr:city']]
-            .filter(Boolean)
-            .join(' ');
-
-          return [{
-            id: `${element.type}-${element.id}`,
-            lat,
-            lon,
-            name: tags['name'] || tags['operator'] || tags['brand'] || 'Colonnina',
-            brand: tags['brand'] || tags['operator'],
-            address: address || undefined,
-            openingHours: tags['opening_hours'],
-            prices: [{
-              type: 'electric' as const,
-              price: tags['fee'] === 'no' ? 0 : undefined,
-              displayPrice: tags['charge']
-            }],
-            electric: true
-          }];
-        })
-        .filter(station => this.isAlongRoute(station, sampledCoordinates, this.routeFuelCorridorKm))),
-      catchError(error => {
-        console.error('Unable to load fuel stations', error);
-        return of([]);
-      })
-    );
-  }
-
-  private getElectricStationsAround(center: { lat: number; lon: number }, radiusMeters: number): Observable<FuelStation[]> {
-    const query = `[out:json][timeout:25];nwr["amenity"="charging_station"](around:${Math.max(Math.round(radiusMeters), 1)},${center.lat},${center.lon});out center tags;`;
-    const url = `${this.appConfig.overpassUrl}?data=${encodeURIComponent(query)}`;
-
-    return this.http.jsonp<OverpassResponse>(url, 'jsonp').pipe(
-      map((response: OverpassResponse) => (response.elements ?? []).flatMap(element => {
-        const lat = element.lat ?? element.center?.lat;
-        const lon = element.lon ?? element.center?.lon;
-        if (lat == null || lon == null) return [];
-
-        const tags = element.tags ?? {};
-        const address = [tags['addr:street'], tags['addr:housenumber'], tags['addr:city']]
-          .filter(Boolean)
-          .join(' ');
-
-        return [{
-          id: `${element.type}-${element.id}`,
-          lat,
-          lon,
-          name: tags['name'] || tags['operator'] || tags['brand'] || 'Colonnina',
-          brand: tags['brand'] || tags['operator'],
-          address: address || undefined,
-          openingHours: tags['opening_hours'],
-          prices: [{
-            type: 'electric' as const,
-            price: tags['fee'] === 'no' ? 0 : undefined,
-            displayPrice: tags['charge']
-          }],
-          electric: true
-        }];
-      })),
-      catchError(error => {
-        console.error('Unable to load electric stations', error);
         return of([]);
       })
     );
@@ -312,17 +225,4 @@ export class RestService {
       return of(null);
     }))
   }
-}
-
-interface OverpassResponse {
-  elements: OverpassElement[];
-}
-
-interface OverpassElement {
-  type: string;
-  id: number;
-  lat?: number;
-  lon?: number;
-  center?: { lat: number; lon: number };
-  tags?: Record<string, string>;
 }
