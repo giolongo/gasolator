@@ -2,28 +2,56 @@ name: Update fuel prices
 
 on:
   schedule:
-    - cron: '0 2 * * *'
+    # GitHub cron is UTC. 07:00 UTC = 09:00 in Italy during daylight saving time.
+    - cron: '0 7 * * *'
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: update-fuel-prices
+  cancel-in-progress: false
+
 jobs:
   update:
     runs-on: ubuntu-latest
+    env:
+      TZ: Europe/Rome
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - run: npm run update:fuel-data
-      - run: npm run build -- --configuration production --progress=false
+
+      - name: Sync branch
+        run: git pull --rebase origin "$GITHUB_REF_NAME"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download MIMIT fuel prices
+        run: npm run update:fuel-data
+
+      - name: Build production app
+        run: npm run build -- --configuration production --progress=false
+
+      - name: Write workflow summary
+        run: |
+          echo "## Prezzi carburante" >> "$GITHUB_STEP_SUMMARY"
+          echo "Dati scaricati e build completata il $(date '+%d/%m/%Y alle %H:%M:%S %Z')." >> "$GITHUB_STEP_SUMMARY"
+
       - name: Commit updated data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add public/fuel-data docs
           git diff --cached --quiet || git commit -m "chore: update daily fuel prices"
+          git pull --rebase origin "$GITHUB_REF_NAME"
           git push
