@@ -2,8 +2,8 @@ name: Update fuel prices
 
 on:
   schedule:
-    # GitHub cron is UTC. 07:00 UTC = 09:00 in Italy during daylight saving time.
-    - cron: '0 7 * * *'
+    # GitHub cron is UTC. During Italian daylight saving time: 07:00, 13:00, 18:00 UTC = 09:00, 15:00, 20:00 in Italy.
+    - cron: '0 7,13,18 * * *'
   workflow_dispatch:
 
 permissions:
