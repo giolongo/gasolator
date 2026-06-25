@@ -15,7 +15,9 @@ export class RestService {
   http = inject(HttpClient);
   private readonly appConfig = inject(APP_CONFIG);
   private readonly fuelManifest$ = this.http.get<FuelDataManifest>('/fuel-data/manifest.json', {
-    params: new HttpParams().set('notShowLoader', true)
+    params: new HttpParams()
+      .set('notShowLoader', true)
+      .set('v', Date.now().toString())
   }).pipe(shareReplay(1));
 
   constructor() { }
@@ -50,7 +52,7 @@ export class RestService {
           .filter(cell => availableCells.has(cell));
         if (!requestedCells.length) return of([]);
 
-        const params = new HttpParams().set('notShowLoader', true);
+        const params = this.getFuelDataParams(manifest);
         return from(requestedCells).pipe(
           mergeMap(cell => this.http.get<FuelStation[]>(`/fuel-data/${cell}.json`, { params }).pipe(
             catchError(() => of([]))
@@ -79,7 +81,7 @@ export class RestService {
           .filter(cell => availableCells.has(cell));
         if (!requestedCells.length) return of([]);
 
-        const params = new HttpParams().set('notShowLoader', true);
+        const params = this.getFuelDataParams(manifest);
         return from(requestedCells).pipe(
           mergeMap(cell => this.http.get<FuelStation[]>(`/fuel-data/${cell}.json`, { params }).pipe(
             catchError(() => of([]))
@@ -130,6 +132,12 @@ export class RestService {
     }
 
     return [...cells];
+  }
+
+  private getFuelDataParams(manifest: FuelDataManifest): HttpParams {
+    return new HttpParams()
+      .set('notShowLoader', true)
+      .set('v', manifest.updatedAt);
   }
 
   private isAlongRoute(station: FuelStation, routeCoordinates: [number, number][], radiusKm: number): boolean {
