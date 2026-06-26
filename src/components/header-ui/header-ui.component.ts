@@ -1,4 +1,4 @@
-import { Component, output, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, output, inject, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,6 +10,7 @@ import { Subscription } from 'rxjs';
   selector: 'app-header-ui',
   imports: [CommonModule, MatToolbarModule, MatButtonModule, MatIconModule],
   templateUrl: './header-ui.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './header-ui.component.scss'
 })
 export class HeaderUiComponent implements OnInit, OnDestroy {

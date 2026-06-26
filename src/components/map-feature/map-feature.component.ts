@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, effect, inject, input, AfterViewInit, output } from '@angular/core';
+
+import { Component, effect, inject, input, AfterViewInit, output, ChangeDetectionStrategy } from '@angular/core';
 import { Feature, Overlay } from 'ol';
 import { Coordinate } from 'ol/coordinate';
 import Map from 'ol/Map';
@@ -19,8 +19,9 @@ import { RestService } from '../../services/rest.service';
 
 @Component({
   selector: 'app-map-feature',
-  imports: [CommonModule, TranslateModule],
+  imports: [TranslateModule],
   templateUrl: './map-feature.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./map-feature.component.scss']
 })
 export class MapFeatureComponent implements AfterViewInit {
