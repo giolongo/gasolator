@@ -41,8 +41,17 @@ export class MapFeatureComponent implements AfterViewInit {
   private routeRequestId = 0;
   private activeAreaSearch?: FuelAreaSearch;
   private currentUserPosition?: { lat: number; lon: number };
+  private loadedFuelStations: FuelStation[] = [];
+  private loadedFuelType: FuelType = 'petrol';
+  private loadedRouteMetrics: RouteMetrics | null = null;
+  private fuelMarkersEnabled = false;
   protected selectedFuelStation?: FuelStation;
   protected selectedFuelType: FuelType = 'petrol';
+  protected availableFuelBrands: string[] = [];
+  protected selectedFuelBrands: string[] = [];
+  protected isFuelBrandFilterCollapsed = true;
+  protected fuelBrandFilterPosition?: { x: number; y: number };
+  private fuelBrandFilterMovedByUser = false;
 
   coordinate = input<FuelSearchRequest>();
 
@@ -71,6 +80,7 @@ export class MapFeatureComponent implements AfterViewInit {
       if (!request.coordinate.from || !request.coordinate.to) return;
 
       this.removeDynamicLayers();
+      this.resetFuelStationFilters();
       this.activeAreaSearch = undefined;
       const outboundPoints = [
         request.coordinate.from,
@@ -95,6 +105,13 @@ export class MapFeatureComponent implements AfterViewInit {
         this.showGoneOrReturn();
         const metrics = this.aggregateRouteMetrics(routes);
         this.routeMetrics.emit(metrics);
+
+        if (!request.showFuelStations) {
+          this.setLoadedFuelStations([], request.fuelType, { ...metrics, fuelStationsCount: 0 }, false);
+          this.combinedExtent = createEmpty();
+          return;
+        }
+
         const routeCoordinates = routes.flatMap(response => {
           const geometry = response.routes?.[0]?.geometry;
           return geometry ? this.decodePolyline(geometry) : [];
@@ -104,8 +121,7 @@ export class MapFeatureComponent implements AfterViewInit {
         this.restService.getFuelStations(routeCoordinates).subscribe(stations => {
           if (requestId !== this.routeRequestId) return;
           const visibleStations = stations.filter(station => this.hasSelectedFuel(station, request.fuelType));
-          this.addFuelStationMarkers(visibleStations, request.fuelType);
-          this.routeMetrics.emit({ ...metrics, fuelStationsCount: visibleStations.length });
+          this.setLoadedFuelStations(visibleStations, request.fuelType, metrics, true);
         });
         this.combinedExtent = createEmpty();
       });
@@ -264,6 +280,7 @@ export class MapFeatureComponent implements AfterViewInit {
 
   private runAreaSearch(request: FuelAreaSearch & { center: { lat: number; lon: number } }, requestId: number, fitView: boolean): void {
     this.removeDynamicLayers();
+    this.resetFuelStationFilters();
     this.selectedFuelType = request.fuelType;
     this.activeAreaSearch = request;
     this.drawAreaSearch(request.center, request.radiusMeters);
@@ -279,13 +296,12 @@ export class MapFeatureComponent implements AfterViewInit {
     this.restService.getFuelStationsAround(request.center, request.radiusMeters).subscribe(stations => {
       if (requestId !== this.routeRequestId) return;
       const visibleStations = stations.filter(station => this.hasSelectedFuel(station, request.fuelType));
-      this.addFuelStationMarkers(visibleStations, request.fuelType);
-      this.routeMetrics.emit({
+      this.setLoadedFuelStations(visibleStations, request.fuelType, {
         distanceKm: 0,
         durationMinutes: 0,
         routeWarnings: [],
-        fuelStationsCount: visibleStations.length
-      });
+        fuelStationsCount: null
+      }, true);
     });
   }
 
@@ -362,19 +378,197 @@ export class MapFeatureComponent implements AfterViewInit {
       this.routeAnimationIds.clear();
       this.dynamicLayers.forEach(layer => this.map?.removeLayer(layer));
       this.dynamicLayers = []; // Svuota l'array
-      this.fuelStationOverlays.forEach(overlay => this.map?.removeOverlay(overlay));
-      this.fuelStationOverlays = [];
+      this.removeFuelStationMarkers();
       this.selectedFuelStation = undefined;
     }
   }
 
-  private addFuelStationMarkers(stations: FuelStation[], fuelType: FuelType): void {
+  private resetFuelStationFilters(): void {
+    this.loadedFuelStations = [];
+    this.loadedRouteMetrics = null;
+    this.fuelMarkersEnabled = false;
+    this.availableFuelBrands = [];
+    this.selectedFuelBrands = [];
+    this.isFuelBrandFilterCollapsed = true;
+    this.fuelBrandFilterPosition = undefined;
+    this.fuelBrandFilterMovedByUser = false;
+  }
+
+  private removeFuelStationMarkers(): void {
     this.fuelStationOverlays.forEach(overlay => this.map?.removeOverlay(overlay));
     this.fuelStationOverlays = [];
-    const bestPrice = this.getBestVisibleFuelPrice(stations, fuelType);
+  }
 
-    stations.forEach(station => {
+  private setLoadedFuelStations(stations: FuelStation[], fuelType: FuelType, metrics: RouteMetrics, markersEnabled: boolean): void {
+    this.loadedFuelStations = stations;
+    this.loadedFuelType = fuelType;
+    this.selectedFuelType = fuelType;
+    this.loadedRouteMetrics = metrics;
+    this.fuelMarkersEnabled = markersEnabled;
+    this.availableFuelBrands = this.getAvailableFuelBrands(stations);
+    this.selectedFuelBrands = [...this.availableFuelBrands];
+    this.isFuelBrandFilterCollapsed = true;
+    this.refreshFuelStationMarkers();
+  }
+
+  private refreshFuelStationMarkers(): void {
+    const filteredStations = this.getFilteredFuelStations();
+
+    if (this.fuelMarkersEnabled) {
+      this.addFuelStationMarkers(filteredStations, this.loadedFuelType);
+    } else {
+      this.removeFuelStationMarkers();
+    }
+
+    if (this.loadedRouteMetrics) {
+      this.routeMetrics.emit({
+        ...this.loadedRouteMetrics,
+        fuelStationsCount: this.fuelMarkersEnabled ? filteredStations.length : 0
+      });
+    }
+  }
+
+  protected showFuelBrandFilter(): boolean {
+    return this.fuelMarkersEnabled && this.availableFuelBrands.length > 0;
+  }
+
+  protected isFuelBrandSelected(brand: string): boolean {
+    return this.selectedFuelBrands.includes(brand);
+  }
+
+  protected get selectedFuelBrandCount(): number {
+    return this.selectedFuelBrands.length;
+  }
+
+  protected toggleFuelBrandFilter(panel: HTMLElement): void {
+    const willOpen = this.isFuelBrandFilterCollapsed;
+    this.isFuelBrandFilterCollapsed = !this.isFuelBrandFilterCollapsed;
+
+    if (!willOpen && !this.fuelBrandFilterMovedByUser) {
+      this.fuelBrandFilterPosition = undefined;
+      panel.style.left = '';
+      panel.style.top = '';
+      panel.style.bottom = '';
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => this.fitFuelBrandFilterInViewport(panel));
+    });
+  }
+
+  private fitFuelBrandFilterInViewport(panel: HTMLElement): void {
+    const container = panel.parentElement as HTMLElement | null;
+    if (!container) return;
+
+    const margin = 12;
+    const containerRect = container.getBoundingClientRect();
+    const panelRect = panel.getBoundingClientRect();
+    const maxX = Math.max(margin, containerRect.width - panel.offsetWidth - margin);
+    const maxY = Math.max(margin, containerRect.height - panel.offsetHeight - margin);
+    const currentX = this.fuelBrandFilterMovedByUser
+      ? this.fuelBrandFilterPosition?.x ?? panelRect.left - containerRect.left
+      : margin;
+    const currentY = this.fuelBrandFilterMovedByUser
+      ? this.fuelBrandFilterPosition?.y ?? panelRect.top - containerRect.top
+      : maxY;
+    const x = Math.max(margin, Math.min(maxX, currentX));
+    const y = Math.max(margin, Math.min(maxY, currentY));
+
+    this.fuelBrandFilterPosition = { x, y };
+    panel.style.left = `${x}px`;
+    panel.style.top = `${y}px`;
+    panel.style.bottom = 'auto';
+  }
+
+  protected startFuelBrandFilterDrag(event: PointerEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const handle = event.currentTarget as HTMLElement;
+    const panel = handle.closest('.fuel-brand-filter') as HTMLElement | null;
+    const container = panel?.parentElement as HTMLElement | null;
+    if (!panel || !container) return;
+
+    const panelRect = panel.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    const pointerOffsetX = event.clientX - panelRect.left;
+    const pointerOffsetY = event.clientY - panelRect.top;
+    this.fuelBrandFilterMovedByUser = true;
+
+    const movePanel = (moveEvent: PointerEvent) => {
+      const maxX = Math.max(0, containerRect.width - panel.offsetWidth);
+      const maxY = Math.max(0, containerRect.height - panel.offsetHeight);
+      const x = Math.max(0, Math.min(maxX, moveEvent.clientX - containerRect.left - pointerOffsetX));
+      const y = Math.max(0, Math.min(maxY, moveEvent.clientY - containerRect.top - pointerOffsetY));
+      this.fuelBrandFilterPosition = { x, y };
+      panel.style.left = `${x}px`;
+      panel.style.top = `${y}px`;
+      panel.style.bottom = 'auto';
+    };
+
+    const stopDrag = () => {
+      window.removeEventListener('pointermove', movePanel);
+      window.removeEventListener('pointerup', stopDrag);
+      window.removeEventListener('pointercancel', stopDrag);
+    };
+
+    window.addEventListener('pointermove', movePanel);
+    window.addEventListener('pointerup', stopDrag, { once: true });
+    window.addEventListener('pointercancel', stopDrag, { once: true });
+  }
+
+  protected onFuelBrandToggle(brand: string, event: Event): void {
+    const target = event.target as HTMLInputElement | null;
+    const checked = target?.checked ?? false;
+
+    if (checked) {
+      this.selectedFuelBrands = Array.from(new Set([...this.selectedFuelBrands, brand]));
+    } else {
+      this.selectedFuelBrands = this.selectedFuelBrands.filter(selectedBrand => selectedBrand !== brand);
+    }
+
+    this.refreshFuelStationMarkers();
+  }
+
+  protected selectAllFuelBrands(): void {
+    this.selectedFuelBrands = [...this.availableFuelBrands];
+    this.refreshFuelStationMarkers();
+  }
+
+  protected deselectAllFuelBrands(): void {
+    this.selectedFuelBrands = [];
+    this.refreshFuelStationMarkers();
+  }
+
+  protected getFuelBrandColor(brand: string): string {
+    return this.getBrandColor(brand);
+  }
+
+  private getFilteredFuelStations(): FuelStation[] {
+    if (!this.selectedFuelBrands.length) return [];
+
+    const selectedBrands = new Set(this.selectedFuelBrands);
+    return this.loadedFuelStations.filter(station => selectedBrands.has(this.getFullBrandLabel(station)));
+  }
+
+  private getAvailableFuelBrands(stations: FuelStation[]): string[] {
+    return Array.from(new Set(stations.map(station => this.getFullBrandLabel(station))))
+      .sort((first, second) => first.localeCompare(second, 'it'));
+  }
+
+  private addFuelStationMarkers(stations: FuelStation[], fuelType: FuelType): void {
+    this.removeFuelStationMarkers();
+    const bestPrice = this.getBestVisibleFuelPrice(stations, fuelType);
+    const sortedStations = [...stations].sort((first, second) => {
+      const firstIsBest = this.isBestVisibleFuelStation(first, fuelType, bestPrice);
+      const secondIsBest = this.isBestVisibleFuelStation(second, fuelType, bestPrice);
+      return Number(firstIsBest) - Number(secondIsBest);
+    });
+
+    sortedStations.forEach(station => {
       const isBestStation = this.isBestVisibleFuelStation(station, fuelType, bestPrice);
+      const baseZIndex = isBestStation ? 2500 : 1200;
       const marker = document.createElement('button');
       marker.type = 'button';
       marker.title = station.name;
@@ -390,15 +584,16 @@ export class MapFeatureComponent implements AfterViewInit {
         padding: '4px 5px',
         border: isBestStation ? '3px solid #ffffff' : '2px solid #ffffff',
         borderRadius: isBestStation ? '9px' : '7px',
-        background: isBestStation ? '#1976d2' : this.getBrandColor(station.brand || station.name),
+        background: isBestStation ? '#1976d2' : this.getFuelBrandColor(this.getFullBrandLabel(station)),
         color: '#ffffff',
         boxShadow: isBestStation ? '0 10px 26px rgba(25,118,210,.55), 0 0 0 7px rgba(25,118,210,.18)' : '0 2px 7px rgba(0,0,0,.3)',
         cursor: 'pointer',
         fontFamily: 'inherit',
         lineHeight: '1.05',
         overflow: 'hidden',
+        position: 'relative',
         transform: isBestStation ? 'translateY(-5px)' : 'none',
-        zIndex: isBestStation ? '2' : '1'
+        zIndex: `${baseZIndex}`
       });
       Object.assign(brand.style, {
         display: 'block',
@@ -436,8 +631,13 @@ export class MapFeatureComponent implements AfterViewInit {
       }
       marker.addEventListener('click', event => {
         event.stopPropagation();
+        this.setFuelMarkerZIndex(marker, 3000);
         this.openFuelStationModal(station, fuelType);
       });
+      marker.addEventListener('mouseenter', () => this.setFuelMarkerZIndex(marker, 3000));
+      marker.addEventListener('focus', () => this.setFuelMarkerZIndex(marker, 3000));
+      marker.addEventListener('mouseleave', () => this.setFuelMarkerZIndex(marker, baseZIndex));
+      marker.addEventListener('blur', () => this.setFuelMarkerZIndex(marker, baseZIndex));
 
       const overlay = new Overlay({
         element: marker,
@@ -445,9 +645,18 @@ export class MapFeatureComponent implements AfterViewInit {
         positioning: 'center-center',
         stopEvent: true
       });
+      overlay.set('fuelStationZIndex', baseZIndex);
       this.fuelStationOverlays.push(overlay);
       this.map?.addOverlay(overlay);
+      this.setFuelMarkerZIndex(marker, baseZIndex);
     });
+  }
+
+  private setFuelMarkerZIndex(marker: HTMLButtonElement, zIndex: number): void {
+    marker.style.zIndex = `${zIndex}`;
+    if (marker.parentElement) {
+      marker.parentElement.style.zIndex = `${zIndex}`;
+    }
   }
 
   protected openFuelStationModal(station: FuelStation, fuelType: FuelType): void {
@@ -501,6 +710,11 @@ export class MapFeatureComponent implements AfterViewInit {
   }
 
   private getBrandLabel(station: FuelStation): string {
+    const value = this.getFullBrandLabel(station);
+    return value.length <= 9 ? value : value.slice(0, 8);
+  }
+
+  private getFullBrandLabel(station: FuelStation): string {
     const value = (station.brand || station.name).trim();
     const knownBrand = [
       ['agip', 'Eni'],
@@ -513,7 +727,7 @@ export class MapFeatureComponent implements AfterViewInit {
       ['pompe bianche', 'PB']
     ].find(([match]) => value.toLowerCase().includes(match));
     if (knownBrand) return knownBrand[1];
-    return value.length <= 9 ? value : value.slice(0, 8);
+    return value || this.translate.instant('MAP.UNKNOWN_BRAND');
   }
 
   private hasSelectedFuel(station: FuelStation, fuelType: FuelType): boolean {

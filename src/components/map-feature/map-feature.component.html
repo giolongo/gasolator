@@ -6,6 +6,50 @@
     Ritorno
   </button>
 </div>
+
+<section
+  #fuelBrandFilter
+  *ngIf="showFuelBrandFilter()"
+  class="fuel-brand-filter"
+  [class.is-collapsed]="isFuelBrandFilterCollapsed"
+  [class.is-positioned]="fuelBrandFilterPosition"
+  [style.left.px]="fuelBrandFilterPosition?.x"
+  [style.top.px]="fuelBrandFilterPosition?.y"
+  [attr.aria-label]="'MAP.FUEL_BRANDS' | translate">
+  <header>
+    <button
+      type="button"
+      class="fuel-brand-filter-drag"
+      (pointerdown)="startFuelBrandFilterDrag($event)"
+      [attr.aria-label]="'MAP.MOVE_PANEL' | translate">
+    </button>
+    <button type="button" class="fuel-brand-filter-toggle" (click)="toggleFuelBrandFilter(fuelBrandFilter)" [attr.aria-expanded]="!isFuelBrandFilterCollapsed">
+      <span>
+        <strong>{{ 'MAP.FUEL_BRANDS' | translate }}</strong>
+        <small>{{ selectedFuelBrandCount }}/{{ availableFuelBrands.length }}</small>
+      </span>
+      <span aria-hidden="true">{{ isFuelBrandFilterCollapsed ? '+' : '-' }}</span>
+    </button>
+  </header>
+  <ng-container *ngIf="!isFuelBrandFilterCollapsed">
+    <div class="fuel-brand-filter-actions">
+      <button type="button" (click)="selectAllFuelBrands()">
+        {{ 'MAP.SELECT_ALL_BRANDS' | translate }}
+      </button>
+      <button type="button" (click)="deselectAllFuelBrands()">
+        {{ 'MAP.DESELECT_ALL_BRANDS' | translate }}
+      </button>
+    </div>
+    <div class="fuel-brand-options">
+      <label *ngFor="let brand of availableFuelBrands" [class.selected]="isFuelBrandSelected(brand)" [style.--brand-color]="getFuelBrandColor(brand)">
+        <input type="checkbox" [checked]="isFuelBrandSelected(brand)" (change)="onFuelBrandToggle(brand, $event)">
+        <i aria-hidden="true"></i>
+        <span>{{ brand }}</span>
+      </label>
+    </div>
+  </ng-container>
+</section>
+
 <div id="map" class="map-container"></div>
 
 <div *ngIf="selectedFuelStation as station" class="fuel-station-modal-backdrop" (click)="closeFuelStationModal()">

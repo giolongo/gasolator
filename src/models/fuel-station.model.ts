@@ -42,6 +42,7 @@ export interface FuelRouteSearch {
   coordinate: import('./distance.model').DistanceModel;
   isRoundTrip: boolean;
   fuelType: FuelType;
+  showFuelStations: boolean;
 }
 
 export type FuelSearchRequest = FuelAreaSearch | FuelRouteSearch;
