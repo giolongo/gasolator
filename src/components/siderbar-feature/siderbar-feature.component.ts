@@ -45,6 +45,7 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
   public costForDayControlName = 'costForDay';
   public fuelCostControlName = 'costFuel';
   public fuelTypeControlName = 'fuelType';
+  public showFuelStationsControlName = 'showFuelStations';
   public usageModeControlName = 'usageMode';
   public searchRadiusControlName = 'searchRadius';
   public roundTripControlName = 'roundTrip';
@@ -75,6 +76,7 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
       [this.selectKmTypeName]: ['kmL', Validators.required],
       [this.fuelCostControlName]: ['0', Validators.required],
       [this.fuelTypeControlName]: ['petrol' satisfies FuelType, Validators.required],
+      [this.showFuelStationsControlName]: [true, Validators.required],
       [this.costKmLFormControlName]: ['0', Validators.required],
       [this.roundTripControlName]: [true, Validators.required],
       [this.costLKmFormControlName]: ['0'],
@@ -216,7 +218,8 @@ export class SiderbarFeatureComponent implements OnInit, AfterViewInit {
       mode: 'route',
       coordinate: {from: this.fromLatLng, to: this.toLatLng, intermediateStops},
       isRoundTrip: this.gasolatorForm?.get(this.roundTripControlName)?.value,
-      fuelType
+      fuelType,
+      showFuelStations: this.gasolatorForm?.get(this.showFuelStationsControlName)?.value !== false
     })
   }
 

@@ -61,6 +61,37 @@
     margin: 0 0.35rem 0.35rem;
   }
 
+  .route-fuel-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin: 0.15rem 0.35rem 0.45rem;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid #d5e1da;
+    border-radius: 8px;
+    background: #f8fbf9;
+    color: #26362e;
+  }
+
+  .route-fuel-toggle div {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+    line-height: 1.15;
+  }
+
+  .route-fuel-toggle mat-icon {
+    width: 1rem;
+    height: 1rem;
+    color: #1976d2;
+    font-size: 1rem;
+    flex: 0 0 auto;
+  }
+
   .usage-mode-toggle {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

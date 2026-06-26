@@ -53,6 +53,7 @@ export class SiderbarUiComponent {
   public roundTripControlName = input<string>();
   public fuelCostControlName = input<string>();
   public fuelTypeControlName = input<string>();
+  public showFuelStationsControlName = input<string>();
   public usageModeControlName = input<string>();
   public searchRadiusControlName = input<string>();
   public mapFormControlNameNominationSuggest =input<{[key: string | number]: NominationSuggestModel[]}>();
