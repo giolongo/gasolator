@@ -43,7 +43,10 @@
     <div class="fuel-brand-options">
       <label *ngFor="let brand of availableFuelBrands" [class.selected]="isFuelBrandSelected(brand)" [style.--brand-color]="getFuelBrandColor(brand)">
         <input type="checkbox" [checked]="isFuelBrandSelected(brand)" (change)="onFuelBrandToggle(brand, $event)">
-        <i aria-hidden="true"></i>
+        <img *ngIf="getFuelBrandIconPath(brand) as iconPath; else brandColorFallback" [src]="iconPath" [alt]="brand">
+        <ng-template #brandColorFallback>
+          <i aria-hidden="true"></i>
+        </ng-template>
         <span>{{ brand }}</span>
       </label>
     </div>

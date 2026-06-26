@@ -177,6 +177,13 @@ body { height: 100dvh; width: 100dvw; margin: 0; font-family: Roboto, "Helvetica
     flex: 0 0 auto;
 }
 
+.fuel-brand-options img {
+    width: 1.45rem;
+    height: 1rem;
+    object-fit: contain;
+    flex: 0 0 auto;
+}
+
 .fuel-brand-options span {
     overflow: hidden;
     text-overflow: ellipsis;

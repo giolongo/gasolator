@@ -545,6 +545,10 @@ export class MapFeatureComponent implements AfterViewInit {
     return this.getBrandColor(brand);
   }
 
+  protected getFuelBrandIconPath(brand: string): string | undefined {
+    return this.getFuelBrandIconPathByLabel(brand);
+  }
+
   private getFilteredFuelStations(): FuelStation[] {
     if (!this.selectedFuelBrands.length) return [];
 
@@ -573,8 +577,22 @@ export class MapFeatureComponent implements AfterViewInit {
       marker.type = 'button';
       marker.title = station.name;
       marker.setAttribute('aria-label', `${this.translate.instant('MAP.FUEL_STATION')}: ${station.name}`);
+      const brandLabel = this.getFullBrandLabel(station);
       const brand = document.createElement('strong');
-      brand.textContent = `${isBestStation ? '★ ' : ''}${this.getBrandLabel(station)}`;
+      const brandIconPath = this.getFuelBrandIconPathByLabel(brandLabel);
+      if (brandIconPath) {
+        const logo = document.createElement('img');
+        logo.src = brandIconPath;
+        logo.alt = brandLabel;
+        brand.append(logo);
+      } else {
+        brand.textContent = this.getBrandLabel(station);
+      }
+      if (isBestStation) {
+        const bestBadge = document.createElement('small');
+        bestBadge.textContent = '★';
+        brand.append(bestBadge);
+      }
       const price = document.createElement('span');
       price.textContent = this.getMarkerPrice(station, fuelType);
       marker.append(brand, price);
@@ -596,15 +614,35 @@ export class MapFeatureComponent implements AfterViewInit {
         zIndex: `${baseZIndex}`
       });
       Object.assign(brand.style, {
-        display: 'block',
+        display: 'flex',
+        height: isBestStation ? '28px' : '20px',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '3px',
         overflow: 'hidden',
         fontSize: '11px',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap'
       });
+      const logo = brand.querySelector('img');
+      if (logo) {
+        Object.assign(logo.style, {
+          maxWidth: isBestStation ? '58px' : '42px',
+          maxHeight: isBestStation ? '24px' : '18px',
+          objectFit: 'contain'
+        });
+      }
+      const bestBadge = brand.querySelector('small');
+      if (bestBadge) {
+        Object.assign(bestBadge.style, {
+          color: '#ffffff',
+          fontSize: '12px',
+          lineHeight: '1'
+        });
+      }
       Object.assign(price.style, {
         display: 'block',
-        marginTop: '3px',
+        marginTop: brandIconPath ? '2px' : '3px',
         fontSize: isBestStation ? '13px' : '11px',
         fontWeight: '700',
         whiteSpace: 'nowrap'
@@ -712,6 +750,18 @@ export class MapFeatureComponent implements AfterViewInit {
   private getBrandLabel(station: FuelStation): string {
     const value = this.getFullBrandLabel(station);
     return value.length <= 9 ? value : value.slice(0, 8);
+  }
+
+  private getFuelBrandIconPathByLabel(brand: string): string | undefined {
+    const brandKey = brand.toLowerCase();
+    const iconName = [
+      ['eni', 'eni.png'],
+      ['esso', 'esso.svg'],
+      ['tamoil', 'tamoil.svg'],
+      ['ip', 'ip.svg']
+    ].find(([match]) => brandKey.includes(match))?.[1];
+
+    return iconName ? `fuel-brands/${iconName}` : undefined;
   }
 
   private getFullBrandLabel(station: FuelStation): string {
