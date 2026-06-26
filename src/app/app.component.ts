@@ -1,4 +1,4 @@
-import { Component, effect, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MatDrawer, MatSidenavModule } from '@angular/material/sidenav';
 import { MatIconModule } from '@angular/material/icon';
@@ -42,20 +42,6 @@ export class AppComponent implements OnInit {
 
   @ViewChild('drawer', { static: true }) public drawer!: MatDrawer;
 
-  protected openSidebarSignal = signal(false);
-
-  updateSidebarSignal(val: boolean): void {
-    this.openSidebarSignal.set(val);
-  }
-
-  constructor() {
-    effect(() => {
-      if (this.openSidebarSignal()) {
-        this.drawer.toggle()
-      }
-    })
-  }
-
   ngOnInit(): void {
     // Check for PWA updates
     if (this.swUpdate.isEnabled) {
@@ -93,11 +79,12 @@ export class AppComponent implements OnInit {
     } else {
       this.translate.use('en');
     }
-    this.drawer.closedStart.subscribe(() => {
-      this.updateSidebarSignal(false)
-    })
     this.setViewportHeight();
     window.addEventListener('resize', this.setViewportHeight);
+  }
+
+  toggleSidebar(): void {
+    this.drawer.toggle();
   }
 
   refreshApp(): void {

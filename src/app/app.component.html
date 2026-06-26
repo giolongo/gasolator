@@ -16,7 +16,7 @@
   <mat-drawer-content>
     <div id="container">
       <div id="navbar">
-        <app-header-feature (openSidebar)="updateSidebarSignal(true)"></app-header-feature>
+        <app-header-feature (openSidebar)="toggleSidebar()"></app-header-feature>
       </div>
       <div id="content">
         @if (routeSummary; as summary) {
