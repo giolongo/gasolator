@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, effect, inject, input, OnInit, output } from '@angular/core';
+import { AfterViewInit, Component, effect, inject, input, OnInit, output, ChangeDetectionStrategy } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { debounceTime, filter, switchMap, tap } from 'rxjs';
@@ -13,6 +13,7 @@ import { SiderbarUiComponent } from "../siderbar-ui/siderbar-ui.component";
   selector: 'app-siderbar-feature',
   imports: [SiderbarUiComponent],
   templateUrl: './siderbar-feature.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './siderbar-feature.component.scss'
 })
 export class SiderbarFeatureComponent implements OnInit, AfterViewInit {

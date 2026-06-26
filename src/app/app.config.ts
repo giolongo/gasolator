@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
 import { loaderInterceptor } from '../interceptors/loader.interceptor';
 import { APP_CONFIG } from '../injections/tokens.injection';
 import { environment } from '../environments/environment';
@@ -22,7 +22,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes), 
     { provide: APP_CONFIG, useValue: environment },
     provideAnimationsAsync(), 
-    provideHttpClient(
+    provideHttpClient(withXhr(), 
       withInterceptors([loaderInterceptor])
     ), provideServiceWorker('ngsw-worker.js', {
             enabled: !isDevMode(),

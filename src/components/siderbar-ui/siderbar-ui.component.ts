@@ -36,6 +36,7 @@ const imports = [
     ...imports
    ],
   templateUrl: './siderbar-ui.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './siderbar-ui.component.scss',
 })
 export class SiderbarUiComponent {

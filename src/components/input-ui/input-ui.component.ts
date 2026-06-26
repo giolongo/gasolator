@@ -12,6 +12,7 @@ import {MatIconModule} from '@angular/material/icon';
   selector: 'app-input-ui',
   imports: [MatFormFieldModule, ReactiveFormsModule, MatInputModule, MatIconModule, MatAutocompleteModule, MatButtonModule],
   templateUrl: './input-ui.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './input-ui.component.scss'
 })
 export class InputUiComponent {
