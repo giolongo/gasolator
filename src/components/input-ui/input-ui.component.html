@@ -1,30 +1,46 @@
-<div *ngIf="formSignal() as form">
+@if (formSignal(); as form) {
+  <div>
     <form [formGroup]="form">
-            <mat-form-field *ngIf="isAutocomplete()" appearance="outline" style="width: 100%;">
-                <mat-label>{{ label() }}</mat-label>
-                <ng-container *ngIf="formArrayNameSignal() as formArrayNameVal">
-                    <div [formArrayName]="formArrayNameVal">
-                        <input *ngIf="type() as type" matInput [type]="type" [id]="controlName()?.toString() ?? ''"
-                            [formControlName]="controlName() ?? ''" [matAutocomplete]="auto">
-                    </div>
-                </ng-container>
-                <input *ngIf="!formArrayNameSignal() && type() as type" matInput [type]="type" [id]="controlName()?.toString() ?? ''"
-                    [formControlName]="controlName() ?? ''" [matAutocomplete]="auto">
-                <button *ngIf="suffixIcon() && (showSuffix() ?? true)" type="button" mat-icon-button matSuffix [attr.aria-label]="suffixAriaLabel()"
-                    (click)="$event.stopPropagation(); suffixClick.emit()">
-                    <mat-icon>{{ suffixIcon() }}</mat-icon>
-                </button>
-                <mat-icon *ngIf="!suffixIcon() && showDeleteIcon()" (click)="$event.stopPropagation(); deleteElement.emit()" style="margin-right: .5rem; color: rgb(167, 17, 17); cursor: pointer;" matSuffix>delete</mat-icon>
-                <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete" [displayWith]="getOptionText">
-                    @for (option of suggest(); track option) {
-                    <mat-option [value]="option">{{option.display_name}}</mat-option>
-                    }
-                </mat-autocomplete>
-            </mat-form-field>
-            <mat-form-field *ngIf="!isAutocomplete()" appearance="outline" style="width: 100%;">
-                <mat-label>{{ label() }}</mat-label>
-                <input *ngIf="type() as type" matInput [type]="type" [id]="controlName()?.toString() ?? ''"
-                    [formControlName]="controlName() ?? ''">
-            </mat-form-field>
+      @if (isAutocomplete()) {
+        <mat-form-field appearance="outline" style="width: 100%;">
+          <mat-label>{{ label() }}</mat-label>
+          @if (formArrayNameSignal(); as formArrayNameVal) {
+            <div [formArrayName]="formArrayNameVal">
+              @if (type(); as type) {
+                <input matInput [type]="type" [id]="controlName()?.toString() ?? ''"
+                  [formControlName]="controlName() ?? ''" [matAutocomplete]="auto">
+              }
+            </div>
+          }
+          @if (!formArrayNameSignal() && type(); as type) {
+            <input matInput [type]="type" [id]="controlName()?.toString() ?? ''"
+              [formControlName]="controlName() ?? ''" [matAutocomplete]="auto">
+          }
+          @if (suffixIcon() && (showSuffix() ?? true)) {
+            <button type="button" mat-icon-button matSuffix [attr.aria-label]="suffixAriaLabel()"
+              (click)="$event.stopPropagation(); suffixClick.emit()">
+              <mat-icon>{{ suffixIcon() }}</mat-icon>
+            </button>
+          }
+          @if (!suffixIcon() && showDeleteIcon()) {
+            <mat-icon (click)="$event.stopPropagation(); deleteElement.emit()" style="margin-right: .5rem; color: rgb(167, 17, 17); cursor: pointer;" matSuffix>delete</mat-icon>
+          }
+          <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete" [displayWith]="getOptionText">
+            @for (option of suggest(); track option) {
+              <mat-option [value]="option">{{option.display_name}}</mat-option>
+            }
+          </mat-autocomplete>
+        </mat-form-field>
+      }
+      @if (!isAutocomplete()) {
+        <mat-form-field appearance="outline" style="width: 100%;">
+          <mat-label>{{ label() }}</mat-label>
+          @if (type(); as type) {
+            <input matInput [type]="type" [id]="controlName()?.toString() ?? ''"
+              [formControlName]="controlName() ?? ''">
+          }
+        </mat-form-field>
+      }
     </form>
-</div>
+  </div>
+}

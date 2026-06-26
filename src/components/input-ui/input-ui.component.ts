@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { ChangeDetectionStrategy, Component, input, output, ViewChild } from '@angular/core';
 import { FormArray, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -10,8 +10,7 @@ import {MatIconModule} from '@angular/material/icon';
 
 @Component({
   selector: 'app-input-ui',
-  imports: [MatFormFieldModule, CommonModule, ReactiveFormsModule, MatInputModule, MatIconModule,
-    MatAutocompleteModule, MatButtonModule],
+  imports: [MatFormFieldModule, ReactiveFormsModule, MatInputModule, MatIconModule, MatAutocompleteModule, MatButtonModule],
   templateUrl: './input-ui.component.html',
   styleUrl: './input-ui.component.scss'
 })

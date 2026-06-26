@@ -1,107 +1,123 @@
-<div *ngIf="showRouteDirectionControl()" class="route-direction-control" role="group" aria-label="Direzione percorso">
-  <button type="button" [class.active]="isGone$.value" (click)="isGone$.next(true)">
-    Andata
-  </button>
-  <button type="button" [class.active]="!isGone$.value" (click)="isGone$.next(false)">
-    Ritorno
-  </button>
-</div>
+@if (showRouteDirectionControl()) {
+  <div class="route-direction-control" role="group" aria-label="Direzione percorso">
+    <button type="button" [class.active]="isGone$.value" (click)="isGone$.next(true)">
+      Andata
+    </button>
+    <button type="button" [class.active]="!isGone$.value" (click)="isGone$.next(false)">
+      Ritorno
+    </button>
+  </div>
+}
 
-<section
-  #fuelBrandFilter
-  *ngIf="showFuelBrandFilter()"
-  class="fuel-brand-filter"
-  [class.is-collapsed]="isFuelBrandFilterCollapsed"
-  [class.is-positioned]="fuelBrandFilterPosition"
-  [style.left.px]="fuelBrandFilterPosition?.x"
-  [style.top.px]="fuelBrandFilterPosition?.y"
-  [attr.aria-label]="'MAP.FUEL_BRANDS' | translate">
-  <header>
-    <button
-      type="button"
-      class="fuel-brand-filter-drag"
-      (pointerdown)="startFuelBrandFilterDrag($event)"
-      [attr.aria-label]="'MAP.MOVE_PANEL' | translate">
-    </button>
-    <button type="button" class="fuel-brand-filter-toggle" (click)="toggleFuelBrandFilter(fuelBrandFilter)" [attr.aria-expanded]="!isFuelBrandFilterCollapsed">
-      <span>
-        <strong>{{ 'MAP.FUEL_BRANDS' | translate }}</strong>
-        <small>{{ selectedFuelBrandCount }}/{{ availableFuelBrands.length }}</small>
-      </span>
-      <span aria-hidden="true">{{ isFuelBrandFilterCollapsed ? '+' : '-' }}</span>
-    </button>
-  </header>
-  <ng-container *ngIf="!isFuelBrandFilterCollapsed">
-    <div class="fuel-brand-filter-actions">
-      <button type="button" (click)="selectAllFuelBrands()">
-        {{ 'MAP.SELECT_ALL_BRANDS' | translate }}
+@if (showFuelBrandFilter()) {
+  <section
+    #fuelBrandFilter
+    class="fuel-brand-filter"
+    [class.is-collapsed]="isFuelBrandFilterCollapsed"
+    [class.is-positioned]="fuelBrandFilterPosition"
+    [style.left.px]="fuelBrandFilterPosition?.x"
+    [style.top.px]="fuelBrandFilterPosition?.y"
+    [attr.aria-label]="'MAP.FUEL_BRANDS' | translate">
+    <header>
+      <button
+        type="button"
+        class="fuel-brand-filter-drag"
+        (pointerdown)="startFuelBrandFilterDrag($event)"
+        [attr.aria-label]="'MAP.MOVE_PANEL' | translate">
       </button>
-      <button type="button" (click)="deselectAllFuelBrands()">
-        {{ 'MAP.DESELECT_ALL_BRANDS' | translate }}
+      <button type="button" class="fuel-brand-filter-toggle" (click)="toggleFuelBrandFilter(fuelBrandFilter)" [attr.aria-expanded]="!isFuelBrandFilterCollapsed">
+        <span>
+          <strong>{{ 'MAP.FUEL_BRANDS' | translate }}</strong>
+          <small>{{ selectedFuelBrandCount }}/{{ availableFuelBrands.length }}</small>
+        </span>
+        <span aria-hidden="true">{{ isFuelBrandFilterCollapsed ? '+' : '-' }}</span>
       </button>
-    </div>
-    <div class="fuel-brand-options">
-      <label *ngFor="let brand of availableFuelBrands" [class.selected]="isFuelBrandSelected(brand)" [style.--brand-color]="getFuelBrandColor(brand)">
-        <input type="checkbox" [checked]="isFuelBrandSelected(brand)" (change)="onFuelBrandToggle(brand, $event)">
-        <img *ngIf="getFuelBrandIconPath(brand) as iconPath; else brandColorFallback" [src]="iconPath" [alt]="brand">
-        <ng-template #brandColorFallback>
-          <i aria-hidden="true"></i>
-        </ng-template>
-        <span>{{ brand }}</span>
-      </label>
-    </div>
-  </ng-container>
-</section>
+    </header>
+    @if (!isFuelBrandFilterCollapsed) {
+      <div class="fuel-brand-filter-actions">
+        <button type="button" (click)="selectAllFuelBrands()">
+          {{ 'MAP.SELECT_ALL_BRANDS' | translate }}
+        </button>
+        <button type="button" (click)="deselectAllFuelBrands()">
+          {{ 'MAP.DESELECT_ALL_BRANDS' | translate }}
+        </button>
+      </div>
+      <div class="fuel-brand-options">
+        @for (brand of availableFuelBrands; track brand) {
+          <label [class.selected]="isFuelBrandSelected(brand)" [style.--brand-color]="getFuelBrandColor(brand)">
+            <input type="checkbox" [checked]="isFuelBrandSelected(brand)" (change)="onFuelBrandToggle(brand, $event)">
+            @if (getFuelBrandIconPath(brand); as iconPath) {
+              <img [src]="iconPath" [alt]="brand">
+            } @else {
+              <i aria-hidden="true"></i>
+            }
+            <span>{{ brand }}</span>
+          </label>
+        }
+      </div>
+    }
+  </section>
+}
 
 <div id="map" class="map-container"></div>
 
-<div *ngIf="selectedFuelStation as station" class="fuel-station-modal-backdrop" (click)="closeFuelStationModal()">
-  <article class="fuel-station-modal" role="dialog" aria-modal="true" [attr.aria-label]="station.name" (click)="$event.stopPropagation()">
-    <header>
-      <div>
-        <span>{{ 'MAP.FUEL_STATION' | translate }}</span>
-        <strong>{{ station.name }}</strong>
-      </div>
-      <button type="button" (click)="closeFuelStationModal()" [attr.aria-label]="'MAP.CLOSE' | translate">
-        <span aria-hidden="true">×</span>
-      </button>
-    </header>
-
-    <dl>
-      <div *ngIf="station.brand && station.brand !== station.name">
-        <dt>{{ 'MAP.BRAND' | translate }}</dt>
-        <dd>{{ station.brand }}</dd>
-      </div>
-      <div *ngIf="station.address">
-        <dt>{{ 'MAP.ADDRESS' | translate }}</dt>
-        <dd>{{ station.address }}</dd>
-      </div>
-      <div *ngIf="station.openingHours">
-        <dt>{{ 'MAP.OPENING_HOURS' | translate }}</dt>
-        <dd>{{ station.openingHours }}</dd>
-      </div>
-      <div class="fuel-price-recap">
-        <dt>{{ 'MAP.PRICES' | translate }}</dt>
-        <dd>
-          <div *ngFor="let price of station.prices" [class.selected-price]="price.type === selectedFuelType">
-            <span>{{ getFuelTypeLabel(price.type) }}</span>
-            <strong>{{ getPriceText(price) }}</strong>
+@if (selectedFuelStation; as station) {
+  <div class="fuel-station-modal-backdrop" (click)="closeFuelStationModal()">
+    <article class="fuel-station-modal" role="dialog" aria-modal="true" [attr.aria-label]="station.name" (click)="$event.stopPropagation()">
+      <header>
+        <div>
+          <span>{{ 'MAP.FUEL_STATION' | translate }}</span>
+          <strong>{{ station.name }}</strong>
+        </div>
+        <button type="button" (click)="closeFuelStationModal()" [attr.aria-label]="'MAP.CLOSE' | translate">
+          <span aria-hidden="true">×</span>
+        </button>
+      </header>
+      <dl>
+        @if (station.brand && station.brand !== station.name) {
+          <div>
+            <dt>{{ 'MAP.BRAND' | translate }}</dt>
+            <dd>{{ station.brand }}</dd>
           </div>
-        </dd>
-      </div>
-      <div *ngIf="getFuelStationUpdatedAt(station) as updatedAt">
-        <dt>{{ 'MAP.UPDATED' | translate }}</dt>
-        <dd>{{ updatedAt }}</dd>
-      </div>
-    </dl>
-
-    <footer>
-      <button type="button" (click)="shareFuelStation(station)">
-        {{ 'MAP.SHARE_MESSAGE' | translate }}
-      </button>
-      <button type="button" class="primary" (click)="openFuelStationInGoogleMaps(station)">
-        {{ 'SHARE.OPEN_GOOGLE_MAPS' | translate }}
-      </button>
-    </footer>
-  </article>
-</div>
+        }
+        @if (station.address) {
+          <div>
+            <dt>{{ 'MAP.ADDRESS' | translate }}</dt>
+            <dd>{{ station.address }}</dd>
+          </div>
+        }
+        @if (station.openingHours) {
+          <div>
+            <dt>{{ 'MAP.OPENING_HOURS' | translate }}</dt>
+            <dd>{{ station.openingHours }}</dd>
+          </div>
+        }
+        <div class="fuel-price-recap">
+          <dt>{{ 'MAP.PRICES' | translate }}</dt>
+          <dd>
+            @for (price of station.prices; track price) {
+              <div [class.selected-price]="price.type === selectedFuelType">
+                <span>{{ getFuelTypeLabel(price.type) }}</span>
+                <strong>{{ getPriceText(price) }}</strong>
+              </div>
+            }
+          </dd>
+        </div>
+        @if (getFuelStationUpdatedAt(station); as updatedAt) {
+          <div>
+            <dt>{{ 'MAP.UPDATED' | translate }}</dt>
+            <dd>{{ updatedAt }}</dd>
+          </div>
+        }
+      </dl>
+      <footer>
+        <button type="button" (click)="shareFuelStation(station)">
+          {{ 'MAP.SHARE_MESSAGE' | translate }}
+        </button>
+        <button type="button" class="primary" (click)="openFuelStationInGoogleMaps(station)">
+          {{ 'SHARE.OPEN_GOOGLE_MAPS' | translate }}
+        </button>
+      </footer>
+    </article>
+  </div>
+}
