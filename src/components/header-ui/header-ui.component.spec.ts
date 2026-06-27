@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { HeaderUiComponent } from './header-ui.component';
+import { appTestProviders } from '../../testing/app-test-providers';
 
 describe('HeaderUiComponent', () => {
   let component: HeaderUiComponent;
@@ -8,7 +9,8 @@ describe('HeaderUiComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [HeaderUiComponent]
+      imports: [HeaderUiComponent],
+      providers: appTestProviders,
     })
     .compileComponents();
 
