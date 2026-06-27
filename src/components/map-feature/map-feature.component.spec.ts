@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { MapFeatureComponent } from './map-feature.component';
+import { appTestProviders } from '../../testing/app-test-providers';
 
 describe('MapFeatureComponent', () => {
   let component: MapFeatureComponent;
@@ -8,7 +9,8 @@ describe('MapFeatureComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MapFeatureComponent]
+      imports: [MapFeatureComponent],
+      providers: appTestProviders,
     })
     .compileComponents();
 
