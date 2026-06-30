@@ -1,9 +1,39 @@
 {
   "APP": {
-    "TITLE": "Gasolator"
+    "TITLE": "Gasolator",
+    "BACK_TO_TOP": "Torna su",
+    "SCROLL_TO_CONTENT": "Scopri le guide"
   },
   "APP_INFO": {
     "DEVELOPED_BY": "Sviluppato da"
+  },
+  "FOOTER": {
+    "NAV_ARIA_LABEL": "Link utili",
+    "FUEL_PRICES": "Prezzi carburante",
+    "TRIP_COST": "Costo viaggio",
+    "METHODOLOGY": "Metodologia",
+    "TERMS": "Termini"
+  },
+  "PUBLISHER": {
+    "ARIA_LABEL": "Guide e informazioni su prezzi carburante e costo viaggio",
+    "EYEBROW": "Guida pratica",
+    "TITLE": "Prezzi carburante e costo viaggio: come usare Gasolator con dati italiani",
+    "INTRO": "Gasolator aiuta chi viaggia in auto a stimare il costo del carburante, confrontare distributori italiani e capire quanto incidono consumo, distanza e prezzo alla pompa. Puoi usarlo per calcolare una tratta o cercare distributori in una zona.",
+    "TRIP_COST_TITLE": "Come viene calcolato il costo del viaggio",
+    "TRIP_COST_TEXT": "Inserendo partenza, destinazione, consumo medio, prezzo del carburante e il campo Costo viaggio, Gasolator calcola una stima basata sulla distanza del percorso. Il campo Costo viaggio serve per aggiungere usura del veicolo, eventuali caselli o altri costi fissi della tratta.",
+    "TRIP_COST_LINK": "Leggi la guida al calcolo",
+    "FUEL_PRICE_TITLE": "Prezzi di benzina, diesel, GPL e metano",
+    "FUEL_PRICE_TEXT": "La funzione distributori mostra i prezzi disponibili per il territorio italiano e permette di filtrare per alimentazione e marca. Quando disponibile, la scheda mostra anche la data di aggiornamento del prezzo.",
+    "FUEL_PRICE_LINK": "Scopri come leggere i prezzi",
+    "METHOD_TITLE": "Metodo, limiti e qualità dei dati",
+    "METHOD_TEXT": "I risultati dipendono da geocodifica, disponibilità dei dati carburante e precisione delle coordinate. Se un civico non è presente, la ricerca può restituire la strada o l'area più vicina.",
+    "METHOD_LINK": "Consulta la metodologia",
+    "FAQ_TITLE": "Domande frequenti",
+    "FAQ_ITALY_TITLE": "I distributori sono disponibili fuori dall'Italia?",
+    "FAQ_ITALY_TEXT": "No. La ricerca dei prezzi carburante è pensata per il suolo italiano, dove sono disponibili i dati usati dall'app.",
+    "FAQ_PRICE_TITLE": "Il prezzo mostrato è garantito?",
+    "FAQ_PRICE_TEXT": "No. Il prezzo è informativo e può cambiare. Prima del rifornimento verifica sempre il prezzo esposto presso il distributore.",
+    "FAQ_LINK": "Vai alle FAQ complete"
   },
   "SUMMARY": {
     "TITLE": "Riepilogo viaggio",
@@ -34,7 +64,7 @@
     "MODE_AREA_DESCRIPTION": "Trova distributori e prezzi entro un raggio scelto. Dati carburanti disponibili solo in Italia.",
     "ADD_STOP": "Aggiungi tappa intermedia",
     "SHOW_ROUTE_FUEL_STATIONS": "Mostra rifornimenti lungo il percorso",
-    "COST_FOR_DAY": "Costo viaggio (usura veicolo)",
+    "COST_FOR_DAY": "Costo viaggio (usura veicolo, caselli o extra)",
     "FUEL_COST": "Prezzo carburante (€/l)",
     "FUEL_TYPE": "Alimentazione",
     "SEARCH_RADIUS": "Raggio ricerca (m)",

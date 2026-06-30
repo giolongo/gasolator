@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, ViewChild, ChangeDetectionStrategy } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, inject, OnDestroy, OnInit, signal, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MatDrawer, MatSidenavModule } from '@angular/material/sidenav';
 import { MatIconModule } from '@angular/material/icon';
@@ -21,7 +21,7 @@ import { FuelSearchRequest, RouteMetrics, RouteSummary } from '../models';
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app.component.scss'
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   title = 'gasolator';
   coordinate?: FuelSearchRequest;
   routeMetrics: RouteMetrics = {
@@ -40,8 +40,14 @@ export class AppComponent implements OnInit {
 
   public isLoading$ = this.restService.inLoading;
   public updateAvailable = signal(false);
+  public showBackToTop = signal(false);
+
+  private mapVisibilityObserver?: IntersectionObserver;
+  private readonly updateBackToTopVisibility = () => this.updateBackToTopFromGeometry();
 
   @ViewChild('drawer', { static: true }) public drawer!: MatDrawer;
+  @ViewChild('drawerContent', { read: ElementRef }) private drawerContent?: ElementRef<HTMLElement>;
+  @ViewChild('mapSection', { read: ElementRef }) private mapSection?: ElementRef<HTMLElement>;
 
   ngOnInit(): void {
     // Check for PWA updates
@@ -82,6 +88,16 @@ export class AppComponent implements OnInit {
     }
     this.setViewportHeight();
     window.addEventListener('resize', this.setViewportHeight);
+  }
+
+  ngAfterViewInit(): void {
+    this.observeMapVisibility();
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('resize', this.setViewportHeight);
+    this.drawerContent?.nativeElement.removeEventListener('scroll', this.updateBackToTopVisibility);
+    this.mapVisibilityObserver?.disconnect();
   }
 
   toggleSidebar(): void {
@@ -190,6 +206,43 @@ export class AppComponent implements OnInit {
     }
 
     return `${hours} ${this.translate.instant('MAP.HOUR')} ${remainingMinutes.toString().padStart(2, '0')} ${this.translate.instant('MAP.MIN')}`;
+  }
+
+  scrollToTop(): void {
+    this.drawerContent?.nativeElement.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  scrollToPublisherContent(): void {
+    document.getElementById('publisher-content')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  private observeMapVisibility(): void {
+    const root = this.drawerContent?.nativeElement;
+    const target = this.mapSection?.nativeElement;
+    if (!root || !target) return;
+
+    if (!('IntersectionObserver' in window)) {
+      root.addEventListener('scroll', this.updateBackToTopVisibility, { passive: true });
+      this.updateBackToTopFromGeometry();
+      return;
+    }
+
+    this.mapVisibilityObserver = new IntersectionObserver(([entry]) => {
+      this.showBackToTop.set(!entry.isIntersecting);
+    }, {
+      root,
+      threshold: 0.01
+    });
+
+    this.mapVisibilityObserver.observe(target);
+  }
+
+  private updateBackToTopFromGeometry(): void {
+    const root = this.drawerContent?.nativeElement;
+    const target = this.mapSection?.nativeElement;
+    if (!root || !target) return;
+
+    this.showBackToTop.set(target.getBoundingClientRect().bottom <= root.getBoundingClientRect().top);
   }
 
 }

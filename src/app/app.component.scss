@@ -1,8 +1,31 @@
 #container {
-    height: 100dvh;
-    width: 100dvw;
+    min-height: 100dvh;
+    width: 100%;
     display: flex;
     flex-direction: column;
+}
+
+mat-drawer-container {
+    height: 100dvh;
+    overflow: hidden;
+}
+
+mat-drawer-content {
+    height: 100dvh;
+    overflow-y: auto;
+}
+
+mat-drawer {
+    width: min(24rem, 92vw);
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+}
+
+mat-drawer app-siderbar-feature {
+    display: block;
+    height: 100%;
+    max-height: 100dvh;
 }
 
 #navbar {
@@ -13,15 +36,16 @@
 }
 
 #footer {
-    height: 5vh;
+    min-height: 3.25rem;
     width: 100%;
     position: relative;
     margin: 0;
-    margin-top: auto;
+    flex: 0 0 auto;
 }
 
 #content {
-    flex: 1;
+    height: calc(100dvh - 5vh);
+    min-height: 32rem;
     width: 100%;
     display: flex;
     text-align: center;
@@ -31,8 +55,193 @@
 }
 
 app-map-feature {
+    display: block;
     width: 100%;
     height: 100%;
+    min-height: inherit;
+}
+
+.content-cue {
+    position: absolute;
+    right: 50%;
+    bottom: 1rem;
+    z-index: 50;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: 2.25rem;
+    max-width: calc(100% - 2rem);
+    padding: 0.35rem 0.7rem 0.35rem 0.85rem;
+    border: 1px solid rgba(25, 118, 210, 0.18);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.94);
+    color: #1976d2;
+    box-shadow: 0 8px 22px rgba(20, 35, 55, 0.16);
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transform: translateX(50%);
+    backdrop-filter: blur(8px);
+}
+
+.content-cue mat-icon {
+    width: 1.15rem;
+    height: 1.15rem;
+    font-size: 1.15rem;
+}
+
+.content-cue:hover,
+.content-cue:focus-visible {
+    background: #1976d2;
+    color: #ffffff;
+    outline: none;
+}
+
+.publisher-content {
+    width: 100%;
+    background: #f7fafc;
+    color: #1f2933;
+    text-align: left;
+}
+
+.publisher-content section {
+    width: min(1120px, calc(100% - 2rem));
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+.publisher-intro {
+    padding: clamp(2.25rem, 5vw, 4.5rem) 0 clamp(1.25rem, 3vw, 2rem);
+}
+
+.publisher-intro .eyebrow {
+    margin: 0 0 0.5rem;
+    color: #1976d2;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.publisher-intro h1 {
+    max-width: 760px;
+    margin: 0;
+    color: #102033;
+    font-size: clamp(1.85rem, 4vw, 3rem);
+    line-height: 1.1;
+}
+
+.publisher-intro p {
+    max-width: 820px;
+    margin: 1rem 0 0;
+    color: #405164;
+    font-size: clamp(1rem, 2vw, 1.12rem);
+    line-height: 1.7;
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    padding-bottom: clamp(1.5rem, 4vw, 3rem);
+}
+
+.content-grid article,
+.faq-preview {
+    border: 1px solid #dbe4ee;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(20, 35, 55, 0.06);
+}
+
+.content-grid article {
+    padding: clamp(1rem, 2vw, 1.35rem);
+    min-width: 0;
+}
+
+.content-grid h2,
+.faq-preview h2 {
+    margin: 0;
+    color: #102033;
+    font-size: 1.15rem;
+    line-height: 1.25;
+}
+
+.content-grid p,
+.faq-preview p {
+    margin: 0.75rem 0 0;
+    color: #46586b;
+    font-size: 0.95rem;
+    line-height: 1.65;
+}
+
+.content-grid a,
+.faq-preview a {
+    display: inline-block;
+    margin-top: 0.9rem;
+    color: #1976d2;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.content-grid a:hover,
+.faq-preview a:hover {
+    text-decoration: underline;
+}
+
+.faq-preview {
+    width: min(1120px, calc(100% - 2rem)) !important;
+    padding: 1rem 1.1rem;
+    margin-bottom: clamp(1.5rem, 4vw, 2.5rem) !important;
+}
+
+.faq-preview div {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e3eaf2;
+}
+
+.faq-preview h3 {
+    margin: 0;
+    color: #23364a;
+    font-size: 0.95rem;
+    line-height: 1.25;
+}
+
+.faq-preview p {
+    margin-top: 0.35rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.faq-preview a {
+    margin-top: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.back-to-top-wrap {
+    position: fixed;
+    right: 1rem;
+    bottom: calc(3.5rem + env(safe-area-inset-bottom));
+    z-index: 70;
+    display: flex;
+    justify-content: flex-end;
+    pointer-events: none;
+}
+
+.back-to-top {
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid rgba(25, 118, 210, 0.18);
+    background: #1976d2;
+    color: #ffffff;
+    box-shadow: 0 10px 24px rgba(20, 35, 55, 0.2);
+    pointer-events: auto;
+}
+
+.back-to-top:hover {
+    background: #155fa8;
 }
 
 .route-summary {
@@ -141,6 +350,74 @@ app-map-feature {
 }
 
 @media (max-width: 640px) {
+    #content,
+    app-map-feature {
+        height: calc(100dvh - 3.5rem);
+        min-height: 28rem;
+    }
+
+    .publisher-content section {
+        width: 100%;
+        padding-right: 1rem;
+        padding-left: 1rem;
+    }
+
+    .publisher-intro {
+        padding-top: 1.75rem;
+    }
+
+    .publisher-intro h1 {
+        font-size: clamp(1.55rem, 8vw, 2.1rem);
+        line-height: 1.15;
+    }
+
+    .publisher-intro p,
+    .content-grid p,
+    .faq-preview p {
+        font-size: 0.94rem;
+        line-height: 1.55;
+    }
+
+    .content-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        padding-bottom: 1rem;
+    }
+
+    .content-grid article,
+    .faq-preview {
+        box-shadow: none;
+    }
+
+    .faq-preview {
+        width: calc(100% - 2rem) !important;
+        padding: 0.85rem;
+        margin-bottom: 1.5rem !important;
+    }
+
+    .faq-preview div {
+        margin-top: 0.65rem;
+        padding-top: 0.65rem;
+    }
+
+    .content-cue {
+        bottom: 0.75rem;
+        max-width: calc(100% - 1rem);
+        min-height: 2.1rem;
+        padding: 0.3rem 0.55rem 0.3rem 0.7rem;
+        font-size: 0.76rem;
+    }
+
+    .back-to-top-wrap {
+        right: 0.85rem;
+        bottom: calc(3.25rem + env(safe-area-inset-bottom));
+    }
+
+    .back-to-top {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+
     .route-summary {
         top: auto;
         right: 0.5rem;
@@ -176,6 +453,15 @@ app-map-feature {
 }
 
 @media (max-width: 380px) {
+    .publisher-content section {
+        padding-right: 0.75rem;
+        padding-left: 0.75rem;
+    }
+
+    .faq-preview {
+        width: calc(100% - 1.5rem) !important;
+    }
+
     .route-summary {
         max-height: min(44dvh, 18rem);
         padding: 0.65rem;

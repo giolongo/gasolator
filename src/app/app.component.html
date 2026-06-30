@@ -13,12 +13,12 @@
   <mat-drawer #drawer mode="over">
     <app-siderbar-feature [routeMetrics]="routeMetrics" (exceuteCalculate)="calculateRoute($event)" (routeSummaryChange)="updateRouteSummary($event)"></app-siderbar-feature>
   </mat-drawer>
-  <mat-drawer-content>
+  <mat-drawer-content #drawerContent>
     <div id="container">
       <div id="navbar">
         <app-header-feature (openSidebar)="toggleSidebar()"></app-header-feature>
       </div>
-      <div id="content">
+      <div id="content" #mapSection>
         @if (routeSummary; as summary) {
           <section class="route-summary" [class.is-collapsed]="isSummaryCollapsed" aria-live="polite">
             <div class="summary-heading">
@@ -76,7 +76,58 @@
           </section>
         }
         <app-map-feature [coordinate]="coordinate" (routeMetrics)="updateRouteMetrics($event)" ></app-map-feature>
+        <button type="button" class="content-cue" (click)="scrollToPublisherContent()" [attr.aria-label]="'APP.SCROLL_TO_CONTENT' | translate">
+          <span>{{ 'APP.SCROLL_TO_CONTENT' | translate }}</span>
+          <mat-icon>keyboard_arrow_down</mat-icon>
+        </button>
       </div>
+      <main id="publisher-content" class="publisher-content" [attr.aria-label]="'PUBLISHER.ARIA_LABEL' | translate">
+        <section class="publisher-intro">
+          <p class="eyebrow">{{ 'PUBLISHER.EYEBROW' | translate }}</p>
+          <h1>{{ 'PUBLISHER.TITLE' | translate }}</h1>
+          <p>{{ 'PUBLISHER.INTRO' | translate }}</p>
+        </section>
+
+        <section class="content-grid">
+          <article>
+            <h2>{{ 'PUBLISHER.TRIP_COST_TITLE' | translate }}</h2>
+            <p>{{ 'PUBLISHER.TRIP_COST_TEXT' | translate }}</p>
+            <a href="/calcolo-costo-viaggio.html">{{ 'PUBLISHER.TRIP_COST_LINK' | translate }}</a>
+          </article>
+
+          <article>
+            <h2>{{ 'PUBLISHER.FUEL_PRICE_TITLE' | translate }}</h2>
+            <p>{{ 'PUBLISHER.FUEL_PRICE_TEXT' | translate }}</p>
+            <a href="/guida-prezzi-carburante.html">{{ 'PUBLISHER.FUEL_PRICE_LINK' | translate }}</a>
+          </article>
+
+          <article>
+            <h2>{{ 'PUBLISHER.METHOD_TITLE' | translate }}</h2>
+            <p>{{ 'PUBLISHER.METHOD_TEXT' | translate }}</p>
+            <a href="/metodologia-dati-carburante.html">{{ 'PUBLISHER.METHOD_LINK' | translate }}</a>
+          </article>
+        </section>
+
+        <section class="faq-preview">
+          <h2>{{ 'PUBLISHER.FAQ_TITLE' | translate }}</h2>
+          <div>
+            <h3>{{ 'PUBLISHER.FAQ_ITALY_TITLE' | translate }}</h3>
+            <p>{{ 'PUBLISHER.FAQ_ITALY_TEXT' | translate }}</p>
+          </div>
+          <div>
+            <h3>{{ 'PUBLISHER.FAQ_PRICE_TITLE' | translate }}</h3>
+            <p>{{ 'PUBLISHER.FAQ_PRICE_TEXT' | translate }}</p>
+          </div>
+          <a href="/faq.html">{{ 'PUBLISHER.FAQ_LINK' | translate }}</a>
+        </section>
+      </main>
+      @if (showBackToTop()) {
+        <div class="back-to-top-wrap">
+          <button type="button" class="back-to-top" mat-icon-button (click)="scrollToTop()" [matTooltip]="'APP.BACK_TO_TOP' | translate" [attr.aria-label]="'APP.BACK_TO_TOP' | translate">
+            <mat-icon>keyboard_arrow_up</mat-icon>
+          </button>
+        </div>
+      }
       <div id="footer">
         <app-footer-feature></app-footer-feature>
       </div>

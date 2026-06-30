@@ -3,10 +3,12 @@
     display: block;
     width: 100%;
     height: 100%;
+    min-height: inherit;
 }
 
 .map-container {
     height: 100%;
+    min-height: inherit;
     width: 100%;
 }
 

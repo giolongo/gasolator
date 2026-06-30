@@ -1,13 +1,12 @@
 User-agent: *
 Allow: /
 Allow: /index.html
-Disallow: /out-tsc/
-Disallow: /*.js
-Disallow: /*.css
-Disallow: /assets/
 
 Sitemap: https://www.gasolator.com/sitemap.xml
 
-# Google AdSense bot
+# Google bots
+User-agent: Mediapartners-Google
+Allow: /
+
 User-agent: Googlebot-Image
 Allow: /
