@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "build-prod": "ng build --configuration production",
     "update:fuel-data": "node scripts/update-fuel-data.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"

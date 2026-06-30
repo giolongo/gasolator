@@ -1,9 +1,39 @@
 {
   "APP": {
-    "TITLE": "Gasolator"
+    "TITLE": "Gasolator",
+    "BACK_TO_TOP": "Back to top",
+    "SCROLL_TO_CONTENT": "Explore guides"
   },
   "APP_INFO": {
     "DEVELOPED_BY": "Developed By"
+  },
+  "FOOTER": {
+    "NAV_ARIA_LABEL": "Useful links",
+    "FUEL_PRICES": "Fuel prices",
+    "TRIP_COST": "Trip cost",
+    "METHODOLOGY": "Methodology",
+    "TERMS": "Terms"
+  },
+  "PUBLISHER": {
+    "ARIA_LABEL": "Guides and information about fuel prices and trip cost",
+    "EYEBROW": "Practical guide",
+    "TITLE": "Fuel prices and trip cost: how to use Gasolator with Italian data",
+    "INTRO": "Gasolator helps drivers estimate fuel costs, compare Italian fuel stations and understand how consumption, distance and pump price affect a trip. You can use it to calculate a route or search fuel stations in an area.",
+    "TRIP_COST_TITLE": "How trip cost is calculated",
+    "TRIP_COST_TEXT": "After you enter origin, destination, average consumption, fuel price and the Trip cost field, Gasolator estimates the cost from the route distance. Trip cost lets you add vehicle wear, possible tolls or other fixed costs for the route.",
+    "TRIP_COST_LINK": "Read the calculation guide",
+    "FUEL_PRICE_TITLE": "Petrol, diesel, LPG and methane prices",
+    "FUEL_PRICE_TEXT": "The fuel station feature shows available prices for Italy and lets you filter by fuel type and brand. When available, the station details also show when the price was updated.",
+    "FUEL_PRICE_LINK": "Learn how to read prices",
+    "METHOD_TITLE": "Method, limits and data quality",
+    "METHOD_TEXT": "Results depend on geocoding, fuel data availability and coordinate accuracy. If a street number is missing, search may return the closest street or area.",
+    "METHOD_LINK": "See the methodology",
+    "FAQ_TITLE": "Frequently asked questions",
+    "FAQ_ITALY_TITLE": "Are fuel stations available outside Italy?",
+    "FAQ_ITALY_TEXT": "No. Fuel price search is designed for Italian territory, where the data used by the app is available.",
+    "FAQ_PRICE_TITLE": "Is the displayed price guaranteed?",
+    "FAQ_PRICE_TEXT": "No. The price is informational and may change. Always check the price displayed at the fuel station before refueling.",
+    "FAQ_LINK": "Go to the full FAQ"
   },
   "SUMMARY": {
     "TITLE": "Trip summary",
@@ -34,7 +64,7 @@
     "MODE_AREA_DESCRIPTION": "Find fuel stations and prices within a selected radius. Fuel price data is available only in Italy.",
     "ADD_STOP": "Add intermediate stop",
     "SHOW_ROUTE_FUEL_STATIONS": "Show fuel stations along the route",
-    "COST_FOR_DAY": "Cost for travel (wear of the vehicle)",
+    "COST_FOR_DAY": "Trip cost (vehicle wear, tolls or extras)",
     "FUEL_COST": "Fuel cost (€/l)",
     "FUEL_TYPE": "Fuel type",
     "SEARCH_RADIUS": "Search radius (m)",

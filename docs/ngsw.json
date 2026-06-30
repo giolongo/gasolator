@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1782815366194,
+  "timestamp": 1782819972135,
   "index": "/index.html",
   "assetGroups": [
     {
@@ -15,8 +15,8 @@
         "/chunk-2U42NZIM.js",
         "/chunk-64QDJX7X.js",
         "/chunk-AVK5TASV.js",
-        "/chunk-BX_TYzHZ.js",
         "/chunk-CV4ZG2D6.js",
+        "/chunk-CestDccd.js",
         "/chunk-ESBMLRW2.js",
         "/chunk-HFJAHO3X.js",
         "/chunk-LJRLCKKR.js",
@@ -24,10 +24,11 @@
         "/chunk-ZF4JISVT.js",
         "/favicon.ico",
         "/index.html",
-        "/main-W4KMI2MP.js",
+        "/main-AJ2H4VP2.js",
         "/manifest.webmanifest",
         "/polyfills-OQVFUOR5.js",
-        "/styles-J2FADW7U.css"
+        "/static-page.css",
+        "/styles-SQJSWBAB.css"
       ],
       "patterns": []
     },
@@ -98,8 +99,8 @@
     "/chunk-2U42NZIM.js": "fb1c5b08c542256db486650d76a495000dfb1092",
     "/chunk-64QDJX7X.js": "064e8c436c2ff8fdd7b292fa862833d0d75bdd8d",
     "/chunk-AVK5TASV.js": "fe0d5e1f3976fa8b27b6c2b9b6c94004e1121ea9",
-    "/chunk-BX_TYzHZ.js": "99e1cb0015f594cf09c831a1aefa5917375f0bc2",
     "/chunk-CV4ZG2D6.js": "eaf5adc7faa5f2bd0906686cd5c860d99e753108",
+    "/chunk-CestDccd.js": "43487262867bce8ea22a476c85b1fd871fe3ce2b",
     "/chunk-ESBMLRW2.js": "79e363d547532b43060304e29d98aa6d3a9191b7",
     "/chunk-HFJAHO3X.js": "615dc494043a1b4eae733083059267a5c25369aa",
     "/chunk-LJRLCKKR.js": "2fbb59c5190280264ee70c34a6ba3c5289f198d8",
@@ -124,11 +125,12 @@
     "/icons/icon-512x512.png": "bf197e7ca70e6440ec9362aae6f36ae21d2a78a9",
     "/icons/icon-72x72.png": "f4cb57d0a97d2a71362278ce6134f66d7f75f490",
     "/icons/icon-96x96.png": "454cdcced0b88f5ddd802631cb7c72536ea13cd7",
-    "/index.html": "a8bfb744b7e7b8e793ac4314dddbff6a84bc59c4",
-    "/main-W4KMI2MP.js": "7432b6306121e240c2ac85078c44a47bcc90153d",
+    "/index.html": "9bffddb9586b039f5d0b004097fa992fd942ca65",
+    "/main-AJ2H4VP2.js": "4f3b1b1b374f706317bb19be59c6a0d9da9b54a0",
     "/manifest.webmanifest": "d49c111bc9f8c7b47c834e3b5e185b9ff0d268dc",
     "/polyfills-OQVFUOR5.js": "845ba3342efe7e336a787e34d67275a7f30c739e",
-    "/styles-J2FADW7U.css": "67ccc03a8b6962def3176cbb16f002e3b4775aeb"
+    "/static-page.css": "cce8c2289df113d3873a08c21ea23e69c85414d8",
+    "/styles-SQJSWBAB.css": "e8393986550184f239dd6d1860dcfc21869edf8a"
   },
   "navigationUrls": [
     {
