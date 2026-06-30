@@ -1,5 +1,5 @@
 
-import { Component, effect, inject, input, AfterViewInit, output, ChangeDetectionStrategy } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, OnDestroy, ViewChild, effect, inject, input, output } from '@angular/core';
 import { Feature, Overlay } from 'ol';
 import { Coordinate } from 'ol/coordinate';
 import Map from 'ol/Map';
@@ -24,7 +24,9 @@ import { RestService } from '../../services/rest.service';
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./map-feature.component.scss']
 })
-export class MapFeatureComponent implements AfterViewInit {
+export class MapFeatureComponent implements AfterViewInit, OnDestroy {
+
+  @ViewChild('mapTarget', { static: true }) private mapTarget!: ElementRef<HTMLDivElement>;
 
   public isGone$ = new BehaviorSubject<boolean>(true);
 
@@ -53,6 +55,7 @@ export class MapFeatureComponent implements AfterViewInit {
   protected isFuelBrandFilterCollapsed = true;
   protected fuelBrandFilterPosition?: { x: number; y: number };
   private fuelBrandFilterMovedByUser = false;
+  private mapResizeObserver?: ResizeObserver;
 
   coordinate = input<FuelSearchRequest>();
 
@@ -144,22 +147,42 @@ export class MapFeatureComponent implements AfterViewInit {
       source: new OSM()
     });
 
-    // 🔹 **Inizializza la mappa con Roma come fallback**
+    this.initializeMapWhenVisible(osmLayer);
+
+    this.isGone$.subscribe(() => {
+      this.showGoneOrReturn();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.mapResizeObserver?.disconnect();
+    this.map?.setTarget(undefined);
+  }
+
+  private initializeMapWhenVisible(osmLayer: TileLayer<OSM>, attempts = 0): void {
+    const target = this.mapTarget.nativeElement;
+    const { width, height } = target.getBoundingClientRect();
+
+    if ((width === 0 || height === 0) && attempts < 20) {
+      requestAnimationFrame(() => this.initializeMapWhenVisible(osmLayer, attempts + 1));
+      return;
+    }
+
     this.map = new Map({
-      target: 'map', // ID dell'elemento HTML
-      layers: [osmLayer], // Assicurati che OSM sia il primo layer
+      target,
+      layers: [osmLayer],
       view: new View({
-        center: fromLonLat([12.4964, 41.9028]), // Roma
+        center: fromLonLat([12.4964, 41.9028]),
         zoom: 12
       })
     });
 
+    this.mapResizeObserver = new ResizeObserver(() => this.map?.updateSize());
+    this.mapResizeObserver.observe(target);
+    requestAnimationFrame(() => this.map?.updateSize());
+
     this.map.once('rendercomplete', () => {
       this.centerOnUserLocation();
-    });
-
-    this.isGone$.subscribe(() => {
-      this.showGoneOrReturn();
     });
   }
 
